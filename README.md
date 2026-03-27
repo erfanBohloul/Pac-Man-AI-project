@@ -133,10 +133,10 @@ Below is a demonstration of the project in action:
 ### Cross Entropy
 ![Pac-Man Gameplay Cross Entropy](https://raw.githubusercontent.com/Alexander-Ploskin/Pac-Man/master/assets/cross_entropy.gif)
 
-### REINFORCE (Basic Environment)
+### DQN (Basic Environment)
 ![Pac-Man Gameplay REINFORCE (Basic Environment)](https://raw.githubusercontent.com/Alexander-Ploskin/Pac-Man/master/assets/reinforce.gif)
 
-### REINFORCE (Ghosts Environment)
+### DQN (Ghosts Environment)
 ![Pac-Man Gameplay REINFORCE (Ghosts Environment)](https://raw.githubusercontent.com/Alexander-Ploskin/Pac-Man/master/assets/reinforce_ghosts.gif)
 
 
