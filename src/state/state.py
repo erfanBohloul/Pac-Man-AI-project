@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from typing import Set, List, Dict
+from copy import deepcopy
 import numpy as np
 
 
@@ -157,6 +158,27 @@ class Map:
         state[self.pacman_position.y, self.pacman_position.x] = 2
 
         return state.reshape(-1)
+
+    def clone(self) -> "Map":
+        return Map(
+            walls=deepcopy(self.walls),             # sets of frozen positions are safe to share
+            pellets=deepcopy(self.pellets),    # mutable, so copy
+            pacman_position=deepcopy(self.pacman_position),
+            ghost_positions=deepcopy(self.ghost_positions),
+            ghost_position_to_color=deepcopy(self.ghost_position_to_color),
+            size=self.size,
+        )
+
+    def is_terminal(self) -> bool:
+        """
+        Determines if the current state is terminal.
+
+        A state is considered terminal if there are no remaining pellets or if Pac-Man has collided with a ghost.
+
+        Returns:
+            bool: True if the state is terminal, False otherwise.
+        """
+        return not self.pellets or len(self.pellets) == 0 or self.pacman_position in self.ghost_positions
 
 
 class MapFullHash(Map):

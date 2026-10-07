@@ -1,3 +1,5 @@
+from copy import copy
+
 from src.environment import PacmanEnvironment
 from src.state import Position, Observation, Map, ActionSpaceEnum, MapFullHash, GhostColorEnum
 from src.environment.ghosts import Ghost
@@ -14,6 +16,8 @@ class GhostsPacmanEnvironment(PacmanEnvironment):
     game dynamics such as Pac-Man and ghost movements, rewards for eating pellets,
     and penalties for colliding with walls or ghosts.
     """
+
+    MAX_STEPS = 200  # Maximum number of steps per episode
 
     def __init__(
         self,
@@ -137,6 +141,18 @@ class GhostsPacmanEnvironment(PacmanEnvironment):
             map=self.map
         )
 
+    def random_step(self) -> Observation:
+        """
+        Perform a random action in the environment.
+
+        Returns:
+            Observation: Updated state of the environment after the random action.
+        """
+        action = random.choice(list(ActionSpaceEnum))
+        return self.step(action)
+
+
+
     def step(self, action: ActionSpaceEnum) -> Observation:
         """
         Perform one step in the environment based on the given action.
@@ -246,3 +262,48 @@ class GhostsPacmanEnvironment(PacmanEnvironment):
                 
 
         return reward
+
+
+    def _reconstruct_ghosts(self, map_instance: Map, ghosts_strategy=RandomGhostStrategy(stability_rate=0.75)) -> Set[Ghost]:
+        # Initialize ghosts
+        walls = map_instance.walls
+        pacman_position = map_instance.pacman_position
+        ghost_positions = map_instance.ghost_positions
+        ghost_position_to_ghost_color = map_instance.ghost_position_to_color
+
+
+        # check if the ghost positions are valid
+        for position in ghost_positions:
+            if position in walls or position == pacman_position:
+                raise ValueError(f"Invalid ghost position: {position}")
+
+        ghosts = set()
+        for position in ghost_positions:
+            color = ghost_position_to_ghost_color.get(position)
+            if color is None:
+                raise ValueError(f"No color found for ghost at position: {position}")
+            ghosts.add(Ghost(position, ghosts_strategy, color))
+
+        return ghosts
+
+        
+    @classmethod
+    def from_map(cls, state_map, past_steps=0, stability_rate=0.75):
+        # Create a new instance without calling __init__.
+        env = cls.__new__(cls)
+        env.grid_size = state_map.size
+        env.num_ghosts = len(state_map.ghost_positions)
+        env.max_steps = cls.MAX_STEPS - past_steps
+        env.stability_rate = stability_rate
+        env.full_hash = isinstance(state_map, MapFullHash)
+        env.ghosts_strategy = RandomGhostStrategy(stability_rate=stability_rate)
+        env.map = state_map.clone()  # Use the clone method to create a copy of the map
+        env.score = 0
+        env.step_count = past_steps
+
+        env.done = env.map.is_terminal() or env.step_count >= env.max_steps
+        if env.done:    # Should we keep it? If the map is terminal, we cannot reconstruct the environment.
+            raise ValueError("Cannot construct a simulation environment from a terminal state")
+
+        env.ghosts = env._reconstruct_ghosts(env.map, env.ghosts_strategy)
+        return env
