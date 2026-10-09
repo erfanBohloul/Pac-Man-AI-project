@@ -9,3 +9,8 @@ cell_size: 40
 framerate: 2
 eval: true
 num_episodes: 1000
+max_steps: 200
+seed: 0
+eval_seed: 20000
+# 0 keeps the visual window running until it is closed.
+display_episodes: 0

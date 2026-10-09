@@ -71,6 +71,7 @@ class GhostsPacmanEnvironment(PacmanEnvironment):
                 walls.add(Position(x, self.grid_size // 2))
         
         # Populate the grid with pellets where there are no walls
+        walls.discard(Position(self.grid_size // 2, self.grid_size // 2))
         pellets = set()
         for x in range(self.grid_size):
             for y in range(self.grid_size):

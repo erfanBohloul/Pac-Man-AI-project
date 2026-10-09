@@ -1,4 +1,5 @@
 import pygame
+from pathlib import Path
 from src.state import Map, ActionSpaceEnum
 from src.drawer import Drawer
 
@@ -38,8 +39,9 @@ class PygameDrawer(Drawer):
     def _load_sprites(self):
         """Load and scale all game sprites once during initialization"""
         # Load base images (replace paths with your actual sprite files)
+        sprites = Path(__file__).resolve().parents[2] / 'sprites'
         pacman_sprites = {
-            dir: pygame.image.load(f"sprites/pacman_{dir}.png").convert_alpha()
+            dir: pygame.image.load(str(sprites / f"pacman_{dir}.png")).convert_alpha()
             for dir in ["RIGHT", "LEFT", "UP", "DOWN", "DEAD"]
         }
         self.pacman_imgs = {
@@ -47,7 +49,7 @@ class PygameDrawer(Drawer):
             for dir, img in pacman_sprites.items()
         }
         ghost_sprites = {
-            color: pygame.image.load(f"sprites/ghost_{color}.png").convert_alpha()
+            color: pygame.image.load(str(sprites / f"ghost_{color}.png")).convert_alpha()
             for color in ["green", "red", "orange", "purple", "blue", "brown"]
         }
         self.ghost_imgs = {

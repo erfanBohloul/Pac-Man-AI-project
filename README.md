@@ -155,6 +155,9 @@ python -m unittest discover -s test -p '*_test.py' -v
 
 ## Build and Run
 
+For the new DQN implementation, training, saved models, benchmarks and visual
+playback, see [the DQN guide](docs/dqn.md).
+
 1. Clone this repository:
    ```bash
    git clone https://github.com/Alexander-Ploskin/Pac-Man.git
@@ -197,10 +200,10 @@ Below is a demonstration of the project in action:
 ### Cross Entropy
 ![Pac-Man Gameplay Cross Entropy](https://raw.githubusercontent.com/Alexander-Ploskin/Pac-Man/master/assets/cross_entropy.gif)
 
-### DQN (Basic Environment)
+### REINFORCE (Basic Environment, legacy demo)
 ![Pac-Man Gameplay REINFORCE (Basic Environment)](https://raw.githubusercontent.com/Alexander-Ploskin/Pac-Man/master/assets/reinforce.gif)
 
-### DQN (Ghosts Environment)
+### REINFORCE (Ghosts Environment, legacy demo)
 ![Pac-Man Gameplay REINFORCE (Ghosts Environment)](https://raw.githubusercontent.com/Alexander-Ploskin/Pac-Man/master/assets/reinforce_ghosts.gif)
 
 
