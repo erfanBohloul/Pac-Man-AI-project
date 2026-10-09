@@ -1,5 +1,3 @@
-from copy import copy
-
 from src.environment import PacmanEnvironment
 from src.state import Position, Observation, Map, ActionSpaceEnum, MapFullHash, GhostColorEnum
 from src.environment.ghosts import Ghost
@@ -121,6 +119,7 @@ class GhostsPacmanEnvironment(PacmanEnvironment):
                 pacman_position=pacman_position,
                 ghost_positions=ghost_positions,
                 ghost_position_to_color=ghost_position_to_ghost_color,
+                ghost_position_to_prev_action={ghost.position: ghost.prev_action for ghost in ghosts},
                 size=self.grid_size
             )
         else:
@@ -130,6 +129,7 @@ class GhostsPacmanEnvironment(PacmanEnvironment):
                 pacman_position=pacman_position,
                 ghost_positions=ghost_positions,
                 ghost_position_to_color=ghost_position_to_ghost_color,
+                ghost_position_to_prev_action={ghost.position: ghost.prev_action for ghost in ghosts},
                 size=self.grid_size
             )
         
@@ -191,7 +191,8 @@ class GhostsPacmanEnvironment(PacmanEnvironment):
         new_y = current_position.y + delta[1]
         new_position = Position(new_x, new_y)
 
-        reward1 = self.compute_reward(self.map, current_position, new_position)
+        # Compute food reward before removing the pellet from the map.
+        reward = self.compute_reward(self.map, current_position, new_position)
 
         # Check if new position is a wall.
         if new_position in self.map.walls:
@@ -204,26 +205,22 @@ class GhostsPacmanEnvironment(PacmanEnvironment):
                 self.map.pellets.remove(new_position)
                 self.score += 10
         
-        # Collision detection
-        if self.map.pacman_position in self.map.ghost_positions:
-            self.done = True
-
-        for ghost in self.ghosts:
-            ghost.move(self.map)
+        collided = self.map.pacman_position in self.map.ghost_positions
+        if not collided:
+            # Movement is sequential: keep the order identical after reconstruction.
+            for ghost in sorted(self.ghosts, key=lambda ghost: ghost.color):
+                ghost.move(self.map)
+            collided = self.map.pacman_position in self.map.ghost_positions
         self.map.ghost_position_to_color = {ghost.position: ghost.color for ghost in self.ghosts}
+        self.map.ghost_position_to_prev_action = {ghost.position: ghost.prev_action for ghost in self.ghosts}
 
-        if self.map.pacman_position in self.map.ghost_positions:
-            self.done = True
-
-        reward2 = self.compute_reward(self.map, current_position, new_position)
-
-        reward = min(reward1, reward2)
+        # Death overrides food, movement and wall rewards, including after a blocked move.
+        if collided:
+            reward = -100
         
         self.step_count += 1
         
-        # Termination condition: either all pellets are eaten or max steps reached.
-        if not self.map.pellets or self.step_count >= self.max_steps:
-            self.done = True
+        self.done = collided or not self.map.pellets or self.step_count >= self.max_steps
         
         return Observation(
             reward=reward,
@@ -264,17 +261,16 @@ class GhostsPacmanEnvironment(PacmanEnvironment):
         return reward
 
 
-    def _reconstruct_ghosts(self, map_instance: Map, ghosts_strategy=RandomGhostStrategy(stability_rate=0.75)) -> Set[Ghost]:
+    def _reconstruct_ghosts(self, map_instance: Map) -> Set[Ghost]:
         # Initialize ghosts
         walls = map_instance.walls
-        pacman_position = map_instance.pacman_position
         ghost_positions = map_instance.ghost_positions
         ghost_position_to_ghost_color = map_instance.ghost_position_to_color
 
 
         # check if the ghost positions are valid
         for position in ghost_positions:
-            if position in walls or position == pacman_position:
+            if position in walls:
                 raise ValueError(f"Invalid ghost position: {position}")
 
         ghosts = set()
@@ -282,28 +278,48 @@ class GhostsPacmanEnvironment(PacmanEnvironment):
             color = ghost_position_to_ghost_color.get(position)
             if color is None:
                 raise ValueError(f"No color found for ghost at position: {position}")
-            ghosts.add(Ghost(position, ghosts_strategy, color))
+            ghost = Ghost(position, self.ghosts_strategy, color)
+            ghost.prev_action = map_instance.ghost_position_to_prev_action.get(position)
+            ghosts.add(ghost)
 
         return ghosts
 
         
     @classmethod
-    def from_map(cls, state_map, past_steps=0, stability_rate=0.75):
-        # Create a new instance without calling __init__.
-        env = cls.__new__(cls)
-        env.grid_size = state_map.size
-        env.num_ghosts = len(state_map.ghost_positions)
-        env.max_steps = cls.MAX_STEPS - past_steps
-        env.stability_rate = stability_rate
-        env.full_hash = isinstance(state_map, MapFullHash)
-        env.ghosts_strategy = RandomGhostStrategy(stability_rate=stability_rate)
-        env.map = state_map.clone()  # Use the clone method to create a copy of the map
-        env.score = 0
+    def from_map(cls, state_map: Map, past_steps=0, stability_rate=0.75,
+                 *, max_steps=MAX_STEPS, score=0, done=False):
+        """Build an independent simulation, including terminal states.
+
+        ``past_steps`` and ``max_steps`` are absolute episode counts. A map does
+        not store the episode limit, score or ghost stability rate; pass those
+        explicitly when reconstructing a running game, or use ``env.clone()``.
+        Maps without direction metadata represent ghosts with no previous move.
+        """
+        if past_steps < 0 or max_steps <= 0:
+            raise ValueError("past_steps must be non-negative and max_steps must be positive")
+
+        env = cls(
+            grid_size=state_map.size,
+            num_ghosts=len(state_map.ghost_positions),
+            max_steps=max_steps,
+            stability_rate=stability_rate,
+            full_hash=isinstance(state_map, MapFullHash),
+        )
+        env.map = state_map.clone()
+        env.score = score
+        env.max_score = score + len(env.map.pellets) * 10
         env.step_count = past_steps
-
-        env.done = env.map.is_terminal() or env.step_count >= env.max_steps
-        if env.done:    # Should we keep it? If the map is terminal, we cannot reconstruct the environment.
-            raise ValueError("Cannot construct a simulation environment from a terminal state")
-
-        env.ghosts = env._reconstruct_ghosts(env.map, env.ghosts_strategy)
+        env.done = done or env.map.is_terminal() or env.step_count >= env.max_steps
+        env.ghosts = env._reconstruct_ghosts(env.map)
         return env
+
+    def clone(self) -> "GhostsPacmanEnvironment":
+        """Copy a running or finished game, preserving its episode settings."""
+        return type(self).from_map(
+            self.map,
+            past_steps=self.step_count,
+            stability_rate=self.ghosts_strategy.stability_rate,
+            max_steps=self.max_steps,
+            score=self.score,
+            done=self.done,
+        )
