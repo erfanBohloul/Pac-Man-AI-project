@@ -30,7 +30,7 @@ def main():
     agent = DQNAgent.from_checkpoint(args.checkpoint, env)
     random.seed(args.seed)
     observation = env.reset()
-    drawer = PygameDrawer(grid_size=env.grid_size, cell_size=40, framerate=0)
+    drawer = PygameDrawer(grid_size=env.grid_size, cell_size=40, framerate=0, sound=False)
     frames = []
     action = ActionSpaceEnum.RIGHT
     try:

@@ -24,6 +24,8 @@ def main(cfg):
         'grid_size': cfg.grid_size,
         'cell_size': cfg.cell_size,
         'framerate': cfg.framerate,
+        'sound': cfg.sound,
+        'sound_volume': cfg.sound_volume,
     }
     
     if controller == 'random':

@@ -26,23 +26,29 @@ def run_algorithm(environment, drawer, controller, display_episodes=0):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_m:
+                drawer.toggle_sound()
         if not running:
             break
 
         # Get an action from the controller and perform a step in the environment.
         action = controller.get_action(observation)
+        previous_score = observation.score
         observation = environment.step(action)
         print(f"Step: {observation.step_count}, Action: {action}, Reward: {observation.reward}, Score: {observation.score}")
 
         # Render the current game state.
-        drawer.draw(observation.map, action)
+        drawer.play_step(previous_score, observation)
         pygame.display.set_caption(
             f"Pac-Man | {type(controller).__name__} | Score {observation.score} | "
-            f"Step {observation.step_count}/{environment.max_steps}"
+            f"Step {observation.step_count}/{environment.max_steps} | Sound {drawer.audio.status} [M]"
         )
+        drawer.draw(observation.map, action)
 
         # Reset the environment if the episode has ended.
         if observation.done:
+            if not drawer.finish_episode():
+                break
             print("Episode finished. Resetting environment.")
             completed_episodes += 1
             if display_episodes > 0 and completed_episodes >= display_episodes:
@@ -77,7 +83,7 @@ def create_environment(environment_name, **params):
     return environment
 
 
-def create_drawer(grid_size=10, cell_size=40, framerate=3):
+def create_drawer(grid_size=10, cell_size=40, framerate=3, sound=True, sound_volume=.25):
     """
     Create and return a Pygame drawer instance for rendering the game.
 
@@ -92,7 +98,9 @@ def create_drawer(grid_size=10, cell_size=40, framerate=3):
     return PygameDrawer(
         grid_size=grid_size,
         cell_size=cell_size,
-        framerate=framerate
+        framerate=framerate,
+        sound=sound,
+        sound_volume=sound_volume,
     )
 
 

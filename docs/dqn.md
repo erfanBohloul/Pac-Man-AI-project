@@ -285,3 +285,15 @@ python cli.py controller=dqn controller.mode=load \
 ```
 
 The updated demonstration GIF is `outputs/dqn/navigation-seed0/gameplay.gif`.
+
+## Sound in the visual game
+
+Visual playback now includes original synthesized arcade effects for eating a
+pellet, winning, dying and reaching the step limit. No downloads or extra
+packages are needed. Press **M** in the game window to mute/unmute; the title bar
+shows the sound state. Audio is enabled by default at 25% volume. Override with
+`sound=false` or `sound_volume=0.15` (range 0 to 1) on the CLI.
+
+Audio runs only during visual playback, not training or numerical evaluation.
+If no audio device is available, the game warns once and continues silently.
+GIF recordings remain silent because GIF does not support audio.
