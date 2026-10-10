@@ -1,0 +1,159 @@
+{
+  "date": "2026-10-10",
+  "algorithm": "Standard DQN with BFS-derived navigation features; Double DQN disabled",
+  "tests_passed": 43,
+  "metric_definition": "A B A B A two-cell alternation with no food eaten across the four transitions. Each continuation counts one step.",
+  "selection": "Best checkpoint by mean reward on validation seeds 1000000-1000099; final comparison seeds 40000-40299.",
+  "limitations": [
+    "Single training seed and fixed maze layout; this is not an unseen-map or multi-training-seed result.",
+    "A reversal can be useful for avoiding ghosts; the metric does not prove every counted move is a mistake.",
+    "Old and new runs differ in training duration and epsilon schedule; this is a before/after comparison, not a controlled feature-only ablation.",
+    "Oscillation is reduced, not guaranteed absent."
+  ],
+  "before": {
+    "episodes": 300,
+    "seed": 40000,
+    "mean_score": 197.8,
+    "mean_reward": 62.18666666666667,
+    "mean_steps": 29.31,
+    "mean_loop_steps": 3.2933333333333334,
+    "loop_step_fraction": 0.1123621062208575,
+    "episodes_with_loops": 47,
+    "mean_longest_foodless_run": 5.99,
+    "win_rate": 0,
+    "checkpoint": "outputs/dqn/ghosts-10-verified-seed0/best.pt"
+  },
+  "after": {
+    "episodes": 300,
+    "seed": 40000,
+    "mean_score": 495.1,
+    "mean_reward": 383.1533333333333,
+    "mean_steps": 65.34666666666666,
+    "mean_loop_steps": 0.4,
+    "loop_step_fraction": 0.006121199755152009,
+    "episodes_with_loops": 28,
+    "mean_longest_foodless_run": 6.706666666666667,
+    "win_rate": 0.5666666666666667,
+    "checkpoint": "outputs/dqn/navigation-seed0/best.pt",
+    "checkpoint_episode": 4500,
+    "navigation_features": true,
+    "double_dqn": false
+  },
+  "training": {
+    "config": {
+      "hidden_size": 128,
+      "learning_rate": 0.0005,
+      "gamma": 0.98,
+      "batch_size": 64,
+      "replay_capacity": 20000,
+      "learning_starts": 1000,
+      "train_every": 4,
+      "target_update_every": 250,
+      "epsilon_start": 1.0,
+      "epsilon_end": 0.05,
+      "epsilon_decay_steps": 80000,
+      "reward_scale": 0.1,
+      "grad_clip": 10.0,
+      "double_dqn": false,
+      "mask_actions": true,
+      "navigation_features": true,
+      "seed": 0,
+      "device": "cpu",
+      "num_threads": 1
+    },
+    "environment": {
+      "environment_name": "ghosts",
+      "grid_size": 10,
+      "max_steps": 200,
+      "num_ghosts": 2,
+      "stability_rate": 0.75
+    },
+    "episodes": 6000,
+    "eval_seed": 1000000,
+    "eval_episodes": 100
+  },
+  "benchmark": {
+    "checkpoint": "outputs/dqn/navigation-seed0/best.pt",
+    "environment": {
+      "environment_name": "ghosts",
+      "grid_size": 10,
+      "max_steps": 200,
+      "num_ghosts": 2,
+      "stability_rate": 0.75
+    },
+    "evaluation_seed": 40000,
+    "training_seed": 0,
+    "checkpoint_episode": 4500,
+    "policies": {
+      "random_all_actions": {
+        "Episodes": 300,
+        "Mean-score": 103.66666666666667,
+        "Std-score": 82.19738594633199,
+        "Mean-reward": -276.98,
+        "Mean-steps": 28.326666666666668,
+        "Mean-food-fraction": 0.17277777777777778,
+        "Win-rate": 0.0,
+        "Death-rate": 0.9966666666666667
+      },
+      "random_legal_actions": {
+        "Episodes": 300,
+        "Mean-score": 107.03333333333333,
+        "Std-score": 77.00626883804165,
+        "Mean-reward": -20.503333333333334,
+        "Mean-steps": 23.57,
+        "Mean-food-fraction": 0.1783888888888889,
+        "Win-rate": 0.0,
+        "Death-rate": 1.0
+      },
+      "untrained_dqn": {
+        "Episodes": 300,
+        "Mean-score": 42.833333333333336,
+        "Std-score": 13.672185306639383,
+        "Mean-reward": -80.58666666666667,
+        "Mean-steps": 22.62,
+        "Mean-food-fraction": 0.07138888888888888,
+        "Win-rate": 0.0,
+        "Death-rate": 1.0
+      },
+      "trained_dqn": {
+        "Episodes": 300,
+        "Mean-score": 495.1,
+        "Std-score": 167.32298088759467,
+        "Mean-reward": 383.1533333333333,
+        "Mean-steps": 65.34666666666666,
+        "Mean-food-fraction": 0.8251666666666667,
+        "Win-rate": 0.5666666666666667,
+        "Death-rate": 0.43333333333333335,
+        "Min-steps-on-win": 67
+      }
+    }
+  },
+  "same_seed_demo": {
+    "episodes": 1,
+    "seed": 0,
+    "mean_score": 550,
+    "mean_reward": 378.0,
+    "mean_steps": 63,
+    "mean_loop_steps": 0,
+    "loop_step_fraction": 0.0,
+    "episodes_with_loops": 0,
+    "mean_longest_foodless_run": 2,
+    "win_rate": 0,
+    "episodes_detail": [
+      {
+        "seed": 0,
+        "score": 550,
+        "reward": 378.0,
+        "steps": 63,
+        "loop_steps": 0,
+        "longest_loop_continuation": 0,
+        "longest_foodless_run": 2,
+        "won": false
+      }
+    ],
+    "checkpoint": "outputs/dqn/navigation-seed0/best.pt",
+    "checkpoint_episode": 4500,
+    "navigation_features": true,
+    "double_dqn": false
+  }
+}

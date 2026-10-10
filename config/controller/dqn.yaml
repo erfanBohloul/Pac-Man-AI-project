@@ -21,6 +21,7 @@ reward_scale: 0.1
 grad_clip: 10.0
 double_dqn: false
 mask_actions: true
+navigation_features: true
 seed: ${seed}
 device: cpu
 num_threads: 1

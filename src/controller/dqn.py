@@ -1,5 +1,6 @@
 """Deep Q-learning on structured Pac-Man states (no screen capture required)."""
 from dataclasses import asdict, dataclass
+from collections import deque
 from pathlib import Path
 import json
 import random
@@ -10,7 +11,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from src.controller.controller import Controller
-from src.state import ActionSpaceEnum, GhostColorEnum, Observation
+from src.state import ActionSpaceEnum, GhostColorEnum, Observation, Position
 
 
 @dataclass
@@ -30,6 +31,7 @@ class DQNConfig:
     grad_clip: float = 10.0
     double_dqn: bool = False
     mask_actions: bool = True
+    navigation_features: bool = False
     seed: int = 0
     device: str = "cpu"  # Small MLPs are usually faster on CPU for this game.
     num_threads: int = 1
@@ -50,13 +52,47 @@ class DQNConfig:
 class StateEncoder:
     VERSION = 1
 
-    def __init__(self, grid_size, max_steps, stability_rate=0.0):
+    def __init__(self, grid_size, max_steps, stability_rate=0.0, navigation_features=False):
         if grid_size < 3 or max_steps <= 0:
             raise ValueError("Invalid grid size or episode limit")
         self.grid_size = grid_size
         self.max_steps = max_steps
         self.stability_rate = stability_rate
-        self.input_size = 3 * grid_size * grid_size + 6 * 8 + 2
+        self.navigation_features = navigation_features
+        self.input_size = 3 * grid_size * grid_size + 6 * 8 + 2 + (12 if navigation_features else 0)
+
+    @staticmethod
+    def distance_map(state, sources):
+        """Shortest walk distances to visible targets, respecting walls."""
+        distances = {position: 0 for position in sources if position not in state.walls}
+        queue = deque(distances)
+        while queue:
+            position = queue.popleft()
+            for dx, dy in state.directions.values():
+                neighbor = Position(position.x + dx, position.y + dy)
+                if (0 <= neighbor.x < state.size and 0 <= neighbor.y < state.size and
+                        neighbor not in state.walls and neighbor not in distances):
+                    distances[neighbor] = distances[position] + 1
+                    queue.append(neighbor)
+        return distances
+
+    def navigation(self, state):
+        """Per action: immediate food, food proximity, ghost proximity.
+
+        These are features of the observed map, not a prescribed move or a
+        rollout. Missing/unreachable targets have zero proximity; walls use -1.
+        """
+        food = self.distance_map(state, state.pellets)
+        ghosts = self.distance_map(state, state.ghost_positions)
+        features = np.full((4, 3), -1.0, dtype=np.float32)
+        for action in state.get_legal_actions():
+            position = state._state_after_action(action)
+            features[int(action)] = (
+                float(position in state.pellets),
+                1 / (1 + food[position]) if position in food else 0,
+                1 / (1 + ghosts[position]) if position in ghosts else 0,
+            )
+        return features.ravel()
 
     def __call__(self, observation: Observation):
         state = observation.map
@@ -79,8 +115,11 @@ class StateEncoder:
             direction = state.ghost_position_to_prev_action.get(position)
             slot[3 + (4 if direction is None else int(direction))] = 1
         time_left = max(0.0, 1 - observation.step_count / self.max_steps)
-        return np.concatenate((board.ravel(), ghosts.ravel(),
-                               np.array([time_left, self.stability_rate], dtype=np.float32)))
+        parts = [board.ravel(), ghosts.ravel(),
+                 np.array([time_left, self.stability_rate], dtype=np.float32)]
+        if self.navigation_features:
+            parts.append(self.navigation(state))
+        return np.concatenate(parts)
 
 
 class QNetwork(nn.Sequential):
@@ -145,7 +184,7 @@ class DQNAgent(Controller):
         cfg = self.config
         self.environment_spec = environment_spec(environment)
         self.encoder = StateEncoder(environment.grid_size, environment.max_steps,
-                                    self.environment_spec.get("stability_rate", 0.0))
+                                    self.environment_spec.get("stability_rate", 0.0), cfg.navigation_features)
         if cfg.device == "auto":
             device = "cuda" if torch.cuda.is_available() else (
                 "mps" if torch.backends.mps.is_available() else "cpu")

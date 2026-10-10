@@ -38,7 +38,7 @@ For the full default map with two ghosts:
 
 ```bash
 python cli.py controller=dqn environment=ghosts \
-  controller.train_episodes=12000 controller.epsilon_decay_steps=100000 \
+  controller.train_episodes=6000 controller.epsilon_decay_steps=80000 \
   controller.eval_every=500 controller.eval_episodes=100 \
   controller.output_dir=outputs/dqn/ghosts-demo num_episodes=300
 ```
@@ -113,6 +113,24 @@ five-way direction encoding (including no previous direction). Food under a
 ghost remains visible in its own input layer. No future simulator outcomes or
 hand-coded action policy are supplied to the network.
 
+New CLI training runs also enable `navigation_features=true`. Twelve additional
+inputs describe each candidate move: whether that square contains food,
+`1 / (1 + distance_to_food)`, and `1 / (1 + distance_to_ghost)`. Distances are
+computed by multi-source BFS on the currently observed maze, respecting walls;
+unreachable/missing targets have proximity zero, and wall moves use -1. These
+are engineered state features, so the resulting agent is **DQN with navigation
+features**. The Q-network still chooses the move; there is no scripted food
+policy, anti-reversal rule, inference-time random escape, or MCTS search.
+
+The original flattened-map MLP sometimes assigned higher Q-values to repeated
+up/down or left/right actions after nearby food was eaten. Supplying spatial
+distance features makes progress toward the remaining food easier to learn.
+The environment rewards and Bellman update are unchanged. Set
+`controller.navigation_features=false` for an ablation of these extra inputs.
+Saved checkpoints retain their encoder setting; older checkpoints lacking this
+field still load with the original input shape and behavior. Loading an old
+model does **not** upgrade its policy: use the newly trained checkpoint below.
+
 The default algorithm is DQN: uniform experience replay, an independently held
 target network, epsilon-greedy exploration with linear decay, Adam, Huber loss
 and gradient clipping. The target network is copied every 250 optimizer updates.
@@ -161,13 +179,14 @@ See `dqn-validation.json` for the measured local runs. Training used one model
 seed per configuration. The basic map has a fixed initial state, so repeated
 evaluations demonstrate reliable execution of that one learned route, not
 unseen-map generalization. The ghost map varies spawn positions and ghost moves;
-the current model improves score but does not reliably clear the map. Further
-architecture, training and multi-seed experiments are future work.
+the original model improved score but did not reliably clear the map. The
+navigation-feature update is reported separately below. Multi-seed training and
+unseen-map experiments remain future work.
 
 Weights, logs and GIFs stay in the ignored local `outputs/` directory. Code,
 configuration, tests, this guide and the compact validation report are committed.
 
-## Local results (2026-10-09)
+## Original flattened-input results (2026-10-09)
 
 | Environment | Episodes evaluated | Random (all actions) | Random (legal actions) | Untrained DQN | Trained DQN |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -186,7 +205,7 @@ trained for 12000 episodes and selected episode 5000, using validation seeds
 optional Double DQN variant. All 35 unit/regression tests passed. The actual
 macOS Pygame window was also exercised with both basic and ghost policies.
 
-The saved local demonstration can be launched immediately after activation:
+The original local demonstration can be launched immediately after activation:
 
 ```bash
 python cli.py controller=dqn controller.mode=load \
@@ -197,3 +216,72 @@ python cli.py controller=dqn controller.mode=load \
 Local GIFs are `outputs/dqn/basic-6-seed0/gameplay.gif` and
 `outputs/dqn/ghosts-10-verified-seed0/gameplay.gif`. The ghost GIF illustrates
 seed 0 (score 400 over 110 moves) and is separate from the evaluation set.
+
+## Diagnosing oscillation (2026-10-10)
+
+The reported up/down behavior was reproduced with the original checkpoint and
+seed 0: with 20 pellets remaining, its greedy policy repeatedly alternated
+between `(4, 2)` and `(4, 3)`, eventually dying at step 110. This was a learned
+Q-value problem, not an animation reset or action-coordinate bug. Small positive
+Q-value differences favored repeating the same moves despite the -1 step cost.
+
+The new training preset adds the distance features described above. It keeps
+standard DQN targets (`double_dqn=false`), the same game rewards and the ability
+to reverse direction when necessary. Both feature construction and old-model
+loading are covered by regression tests. The new checkpoint must be used to see
+the change; loading yesterday's weights preserves yesterday's policy.
+
+Measure behavior with:
+
+```bash
+python -m scripts.inspect_dqn_loops \
+  --checkpoint outputs/dqn/navigation-seed0/best.pt \
+  --episodes 300 --seed 40000 \
+  --output outputs/dqn/navigation-seed0/loops.json
+```
+
+A loop step is the continuation of an `A, B, A, B, A` two-cell alternation with
+no pellet eaten across those four moves. A single reversal is not counted.
+`loop_step_fraction` divides flagged steps by all steps; `episodes_with_loops`
+counts episodes with at least one flagged continuation. Ghosts can make a
+reversal useful, so these are behavior diagnostics, not proof that every flagged
+move is a policy mistake. Also compare score, win rate, survival length and food
+progress; dying early must not be mistaken for solving oscillation.
+
+### Navigation-feature results
+
+Measured on the same 300 episode seeds, 40000-40299, with two ghosts on the
+10 x 10 map (200-step limit):
+
+| Metric | Original DQN | DQN with navigation features |
+| --- | ---: | ---: |
+| Mean score | 197.80 | 495.10 |
+| Win rate | 0% | 56.67% |
+| Mean episode length | 29.31 | 65.35 |
+| Mean flagged loop steps per episode | 3.29 | 0.40 |
+| Flagged loop steps / all steps | 11.24% | 0.61% |
+| Episodes with any flagged loop | 47 / 300 | 28 / 300 |
+
+The new run trained for 6000 episodes; validation selected episode 4500. The
+original run trained for 12000 episodes and selected episode 5000. Both used
+training seed 0, standard DQN targets and the same original game rewards. The
+new epsilon decay spans 80000 environment steps (originally 100000), so this is
+a before/after improvement, not a controlled feature-only ablation. Learning
+across multiple seeds and maze layouts still needs evaluation.
+
+For the original reported demonstration seed 0, the new policy scored 550 in
+63 steps, with no flagged two-cell loops and at most two consecutive foodless
+moves; it eventually died. This illustrates the behavioral improvement without
+claiming every episode is won. Detailed metrics and all settings are recorded in
+`dqn-oscillation-validation.json`; per-episode traces remain in local outputs.
+All 43 regression tests passed, including the original 35 and eight new tests.
+
+Use this **new checkpoint**, after activating the virtual environment:
+
+```bash
+python cli.py controller=dqn controller.mode=load \
+  controller.model_path=outputs/dqn/navigation-seed0/best.pt \
+  environment=ghosts eval=false framerate=8
+```
+
+The updated demonstration GIF is `outputs/dqn/navigation-seed0/gameplay.gif`.
