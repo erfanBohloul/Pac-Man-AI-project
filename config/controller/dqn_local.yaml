@@ -1,0 +1,10 @@
+defaults:
+  - dqn
+
+# Compact fixed-maze experiment: keep navigation inputs and append U/R/D/L wall bits.
+wall_features: false
+local_wall_features: true
+train_episodes: 6000
+eval_every: 500
+eval_episodes: 100
+epsilon_decay_steps: 80000

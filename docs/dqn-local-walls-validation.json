@@ -1,0 +1,809 @@
+{
+  "experiment": "Raw wall plane vs no raw walls vs four explicit adjacent-wall bits.",
+  "training_seeds": [
+    0,
+    10000,
+    20000
+  ],
+  "eval_seed": 70000,
+  "eval_episodes_per_model": 300,
+  "workers": 3,
+  "trials": [
+    {
+      "variant": "local_walls",
+      "training_seed": 0,
+      "settings": {
+        "config": {
+          "hidden_size": 128,
+          "learning_rate": 0.0005,
+          "gamma": 0.98,
+          "batch_size": 64,
+          "replay_capacity": 20000,
+          "learning_starts": 1000,
+          "train_every": 4,
+          "target_update_every": 250,
+          "epsilon_start": 1.0,
+          "epsilon_end": 0.05,
+          "epsilon_decay_steps": 80000,
+          "reward_scale": 0.1,
+          "grad_clip": 10.0,
+          "double_dqn": false,
+          "mask_actions": true,
+          "navigation_features": true,
+          "wall_features": false,
+          "local_wall_features": true,
+          "seed": 0,
+          "device": "cpu",
+          "num_threads": 1
+        },
+        "environment": {
+          "environment_name": "ghosts",
+          "grid_size": 10,
+          "max_steps": 200,
+          "num_ghosts": 2,
+          "stability_rate": 0.75
+        },
+        "episodes": 6000,
+        "eval_seed": 1000000,
+        "eval_episodes": 100
+      },
+      "input_size": 266,
+      "parameters": 51204,
+      "final_environment_steps": 334500,
+      "selected_validation": {
+        "Episodes": 100,
+        "Mean-score": 540.2,
+        "Std-score": 113.11904875801949,
+        "Mean-reward": 395.72,
+        "Mean-steps": 111.99,
+        "Mean-food-fraction": 0.9003333333333333,
+        "Win-rate": 0.53,
+        "Death-rate": 0.31,
+        "Min-steps-on-win": 78
+      },
+      "timing": {
+        "total_seconds": 285.4089954170013,
+        "validation_seconds": 22.945869000997845,
+        "environment_steps": 334500,
+        "episodes": 6000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "evaluation": {
+        "episodes": 300,
+        "seed": 70000,
+        "mean_score": 522.0666666666667,
+        "mean_reward": 390.77,
+        "mean_steps": 104.12,
+        "mean_loop_steps": 4.6066666666666665,
+        "loop_step_fraction": 0.044243821231911895,
+        "episodes_with_loops": 146,
+        "mean_longest_foodless_run": 28.696666666666665,
+        "win_rate": 0.65,
+        "checkpoint": "outputs/dqn/wall-comparison/local_walls-seed0/best.pt",
+        "checkpoint_episode": 1000,
+        "navigation_features": true,
+        "wall_features": false,
+        "local_wall_features": true,
+        "double_dqn": false
+      }
+    },
+    {
+      "variant": "walls",
+      "training_seed": 0,
+      "settings": {
+        "config": {
+          "hidden_size": 128,
+          "learning_rate": 0.0005,
+          "gamma": 0.98,
+          "batch_size": 64,
+          "replay_capacity": 20000,
+          "learning_starts": 1000,
+          "train_every": 4,
+          "target_update_every": 250,
+          "epsilon_start": 1.0,
+          "epsilon_end": 0.05,
+          "epsilon_decay_steps": 80000,
+          "reward_scale": 0.1,
+          "grad_clip": 10.0,
+          "double_dqn": false,
+          "mask_actions": true,
+          "navigation_features": true,
+          "wall_features": true,
+          "local_wall_features": false,
+          "seed": 0,
+          "device": "cpu",
+          "num_threads": 1
+        },
+        "environment": {
+          "environment_name": "ghosts",
+          "grid_size": 10,
+          "max_steps": 200,
+          "num_ghosts": 2,
+          "stability_rate": 0.75
+        },
+        "episodes": 6000,
+        "eval_seed": 1000000,
+        "eval_episodes": 100
+      },
+      "input_size": 362,
+      "parameters": 63492,
+      "final_environment_steps": 342992,
+      "selected_validation": {
+        "Episodes": 100,
+        "Mean-score": 520.1,
+        "Std-score": 144.74983644728292,
+        "Mean-reward": 413.98,
+        "Mean-steps": 68.67,
+        "Mean-food-fraction": 0.8668333333333333,
+        "Win-rate": 0.65,
+        "Death-rate": 0.35,
+        "Min-steps-on-win": 67
+      },
+      "timing": null,
+      "evaluation": {
+        "episodes": 300,
+        "seed": 70000,
+        "mean_score": 499.3666666666667,
+        "mean_reward": 387.81,
+        "mean_steps": 66.38,
+        "mean_loop_steps": 0.49333333333333335,
+        "loop_step_fraction": 0.007431957416892638,
+        "episodes_with_loops": 35,
+        "mean_longest_foodless_run": 7.116666666666666,
+        "win_rate": 0.5766666666666667,
+        "checkpoint": "outputs/dqn/navigation-seed0/best.pt",
+        "checkpoint_episode": 4500,
+        "navigation_features": true,
+        "wall_features": true,
+        "local_wall_features": false,
+        "double_dqn": false
+      }
+    },
+    {
+      "variant": "no_walls",
+      "training_seed": 0,
+      "settings": {
+        "config": {
+          "hidden_size": 128,
+          "learning_rate": 0.0005,
+          "gamma": 0.98,
+          "batch_size": 64,
+          "replay_capacity": 20000,
+          "learning_starts": 1000,
+          "train_every": 4,
+          "target_update_every": 250,
+          "epsilon_start": 1.0,
+          "epsilon_end": 0.05,
+          "epsilon_decay_steps": 80000,
+          "reward_scale": 0.1,
+          "grad_clip": 10.0,
+          "double_dqn": false,
+          "mask_actions": true,
+          "navigation_features": true,
+          "wall_features": false,
+          "local_wall_features": false,
+          "seed": 0,
+          "device": "cpu",
+          "num_threads": 1
+        },
+        "environment": {
+          "environment_name": "ghosts",
+          "grid_size": 10,
+          "max_steps": 200,
+          "num_ghosts": 2,
+          "stability_rate": 0.75
+        },
+        "episodes": 6000,
+        "eval_seed": 1000000,
+        "eval_episodes": 100
+      },
+      "input_size": 262,
+      "parameters": 50692,
+      "final_environment_steps": 334830,
+      "selected_validation": {
+        "Episodes": 100,
+        "Mean-score": 533.1,
+        "Std-score": 140.82509389560892,
+        "Mean-reward": 399.44,
+        "Mean-steps": 108.3,
+        "Mean-food-fraction": 0.8885,
+        "Win-rate": 0.61,
+        "Death-rate": 0.24,
+        "Min-steps-on-win": 68
+      },
+      "timing": null,
+      "evaluation": {
+        "episodes": 300,
+        "seed": 70000,
+        "mean_score": 539.6333333333333,
+        "mean_reward": 399.1666666666667,
+        "mean_steps": 114.61333333333333,
+        "mean_loop_steps": 6.63,
+        "loop_step_fraction": 0.05784667287110284,
+        "episodes_with_loops": 181,
+        "mean_longest_foodless_run": 34.403333333333336,
+        "win_rate": 0.61,
+        "checkpoint": "outputs/dqn/no-walls-seed0/best.pt",
+        "checkpoint_episode": 1000,
+        "navigation_features": true,
+        "wall_features": false,
+        "local_wall_features": false,
+        "double_dqn": false
+      }
+    },
+    {
+      "variant": "local_walls",
+      "training_seed": 10000,
+      "settings": {
+        "config": {
+          "hidden_size": 128,
+          "learning_rate": 0.0005,
+          "gamma": 0.98,
+          "batch_size": 64,
+          "replay_capacity": 20000,
+          "learning_starts": 1000,
+          "train_every": 4,
+          "target_update_every": 250,
+          "epsilon_start": 1.0,
+          "epsilon_end": 0.05,
+          "epsilon_decay_steps": 80000,
+          "reward_scale": 0.1,
+          "grad_clip": 10.0,
+          "double_dqn": false,
+          "mask_actions": true,
+          "navigation_features": true,
+          "wall_features": false,
+          "local_wall_features": true,
+          "seed": 10000,
+          "device": "cpu",
+          "num_threads": 1
+        },
+        "environment": {
+          "environment_name": "ghosts",
+          "grid_size": 10,
+          "max_steps": 200,
+          "num_ghosts": 2,
+          "stability_rate": 0.75
+        },
+        "episodes": 6000,
+        "eval_seed": 1000000,
+        "eval_episodes": 100
+      },
+      "input_size": 266,
+      "parameters": 51204,
+      "final_environment_steps": 334730,
+      "selected_validation": {
+        "Episodes": 100,
+        "Mean-score": 510.4,
+        "Std-score": 148.1939760768114,
+        "Mean-reward": 396.15,
+        "Mean-steps": 69.47,
+        "Mean-food-fraction": 0.8506666666666667,
+        "Win-rate": 0.58,
+        "Death-rate": 0.42,
+        "Min-steps-on-win": 70
+      },
+      "timing": {
+        "total_seconds": 281.96928670800116,
+        "validation_seconds": 22.8795938739986,
+        "environment_steps": 334730,
+        "episodes": 6000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "evaluation": {
+        "episodes": 300,
+        "seed": 70000,
+        "mean_score": 489.2,
+        "mean_reward": 374.1666666666667,
+        "mean_steps": 66.75333333333333,
+        "mean_loop_steps": 0.52,
+        "loop_step_fraction": 0.007789873164885649,
+        "episodes_with_loops": 38,
+        "mean_longest_foodless_run": 6.63,
+        "win_rate": 0.5466666666666666,
+        "checkpoint": "outputs/dqn/wall-comparison/local_walls-seed10000/best.pt",
+        "checkpoint_episode": 4500,
+        "navigation_features": true,
+        "wall_features": false,
+        "local_wall_features": true,
+        "double_dqn": false
+      }
+    },
+    {
+      "variant": "walls",
+      "training_seed": 10000,
+      "settings": {
+        "config": {
+          "hidden_size": 128,
+          "learning_rate": 0.0005,
+          "gamma": 0.98,
+          "batch_size": 64,
+          "replay_capacity": 20000,
+          "learning_starts": 1000,
+          "train_every": 4,
+          "target_update_every": 250,
+          "epsilon_start": 1.0,
+          "epsilon_end": 0.05,
+          "epsilon_decay_steps": 80000,
+          "reward_scale": 0.1,
+          "grad_clip": 10.0,
+          "double_dqn": false,
+          "mask_actions": true,
+          "navigation_features": true,
+          "wall_features": true,
+          "local_wall_features": false,
+          "seed": 10000,
+          "device": "cpu",
+          "num_threads": 1
+        },
+        "environment": {
+          "environment_name": "ghosts",
+          "grid_size": 10,
+          "max_steps": 200,
+          "num_ghosts": 2,
+          "stability_rate": 0.75
+        },
+        "episodes": 6000,
+        "eval_seed": 1000000,
+        "eval_episodes": 100
+      },
+      "input_size": 362,
+      "parameters": 63492,
+      "final_environment_steps": 346299,
+      "selected_validation": {
+        "Episodes": 100,
+        "Mean-score": 535.3,
+        "Std-score": 130.45727657015155,
+        "Mean-reward": 429.63,
+        "Mean-steps": 73.67,
+        "Mean-food-fraction": 0.8921666666666667,
+        "Win-rate": 0.7,
+        "Death-rate": 0.3,
+        "Min-steps-on-win": 70
+      },
+      "timing": {
+        "total_seconds": 292.52793058299903,
+        "validation_seconds": 22.99090208400412,
+        "environment_steps": 346299,
+        "episodes": 6000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "evaluation": {
+        "episodes": 300,
+        "seed": 70000,
+        "mean_score": 488.46666666666664,
+        "mean_reward": 375.72,
+        "mean_steps": 67.7,
+        "mean_loop_steps": 0.6566666666666666,
+        "loop_step_fraction": 0.009699655342195962,
+        "episodes_with_loops": 39,
+        "mean_longest_foodless_run": 8.483333333333333,
+        "win_rate": 0.5733333333333334,
+        "checkpoint": "outputs/dqn/wall-comparison/walls-seed10000/best.pt",
+        "checkpoint_episode": 5500,
+        "navigation_features": true,
+        "wall_features": true,
+        "local_wall_features": false,
+        "double_dqn": false
+      }
+    },
+    {
+      "variant": "no_walls",
+      "training_seed": 10000,
+      "settings": {
+        "config": {
+          "hidden_size": 128,
+          "learning_rate": 0.0005,
+          "gamma": 0.98,
+          "batch_size": 64,
+          "replay_capacity": 20000,
+          "learning_starts": 1000,
+          "train_every": 4,
+          "target_update_every": 250,
+          "epsilon_start": 1.0,
+          "epsilon_end": 0.05,
+          "epsilon_decay_steps": 80000,
+          "reward_scale": 0.1,
+          "grad_clip": 10.0,
+          "double_dqn": false,
+          "mask_actions": true,
+          "navigation_features": true,
+          "wall_features": false,
+          "local_wall_features": false,
+          "seed": 10000,
+          "device": "cpu",
+          "num_threads": 1
+        },
+        "environment": {
+          "environment_name": "ghosts",
+          "grid_size": 10,
+          "max_steps": 200,
+          "num_ghosts": 2,
+          "stability_rate": 0.75
+        },
+        "episodes": 6000,
+        "eval_seed": 1000000,
+        "eval_episodes": 100
+      },
+      "input_size": 262,
+      "parameters": 50692,
+      "final_environment_steps": 329366,
+      "selected_validation": {
+        "Episodes": 100,
+        "Mean-score": 512.3,
+        "Std-score": 146.31400438368118,
+        "Mean-reward": 397.55,
+        "Mean-steps": 65.71,
+        "Mean-food-fraction": 0.8538333333333333,
+        "Win-rate": 0.54,
+        "Death-rate": 0.46,
+        "Min-steps-on-win": 70
+      },
+      "timing": {
+        "total_seconds": 275.4163986249987,
+        "validation_seconds": 22.778321917005087,
+        "environment_steps": 329366,
+        "episodes": 6000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "evaluation": {
+        "episodes": 300,
+        "seed": 70000,
+        "mean_score": 471.3333333333333,
+        "mean_reward": 359.5733333333333,
+        "mean_steps": 62.28666666666667,
+        "mean_loop_steps": 0.5633333333333334,
+        "loop_step_fraction": 0.0090442042170609,
+        "episodes_with_loops": 32,
+        "mean_longest_foodless_run": 6.403333333333333,
+        "win_rate": 0.54,
+        "checkpoint": "outputs/dqn/wall-comparison/no_walls-seed10000/best.pt",
+        "checkpoint_episode": 6000,
+        "navigation_features": true,
+        "wall_features": false,
+        "local_wall_features": false,
+        "double_dqn": false
+      }
+    },
+    {
+      "variant": "local_walls",
+      "training_seed": 20000,
+      "settings": {
+        "config": {
+          "hidden_size": 128,
+          "learning_rate": 0.0005,
+          "gamma": 0.98,
+          "batch_size": 64,
+          "replay_capacity": 20000,
+          "learning_starts": 1000,
+          "train_every": 4,
+          "target_update_every": 250,
+          "epsilon_start": 1.0,
+          "epsilon_end": 0.05,
+          "epsilon_decay_steps": 80000,
+          "reward_scale": 0.1,
+          "grad_clip": 10.0,
+          "double_dqn": false,
+          "mask_actions": true,
+          "navigation_features": true,
+          "wall_features": false,
+          "local_wall_features": true,
+          "seed": 20000,
+          "device": "cpu",
+          "num_threads": 1
+        },
+        "environment": {
+          "environment_name": "ghosts",
+          "grid_size": 10,
+          "max_steps": 200,
+          "num_ghosts": 2,
+          "stability_rate": 0.75
+        },
+        "episodes": 6000,
+        "eval_seed": 1000000,
+        "eval_episodes": 100
+      },
+      "input_size": 266,
+      "parameters": 51204,
+      "final_environment_steps": 328416,
+      "selected_validation": {
+        "Episodes": 100,
+        "Mean-score": 529.2,
+        "Std-score": 126.54443863518834,
+        "Mean-reward": 396.45,
+        "Mean-steps": 97.19,
+        "Mean-food-fraction": 0.882,
+        "Win-rate": 0.62,
+        "Death-rate": 0.34,
+        "Min-steps-on-win": 75
+      },
+      "timing": {
+        "total_seconds": 276.98501787499845,
+        "validation_seconds": 22.034168705999036,
+        "environment_steps": 328416,
+        "episodes": 6000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "evaluation": {
+        "episodes": 300,
+        "seed": 70000,
+        "mean_score": 526.4333333333333,
+        "mean_reward": 394.82666666666665,
+        "mean_steps": 99.94,
+        "mean_loop_steps": 5.116666666666666,
+        "loop_step_fraction": 0.051197385097725305,
+        "episodes_with_loops": 153,
+        "mean_longest_foodless_run": 25.616666666666667,
+        "win_rate": 0.63,
+        "checkpoint": "outputs/dqn/wall-comparison/local_walls-seed20000/best.pt",
+        "checkpoint_episode": 1000,
+        "navigation_features": true,
+        "wall_features": false,
+        "local_wall_features": true,
+        "double_dqn": false
+      }
+    },
+    {
+      "variant": "walls",
+      "training_seed": 20000,
+      "settings": {
+        "config": {
+          "hidden_size": 128,
+          "learning_rate": 0.0005,
+          "gamma": 0.98,
+          "batch_size": 64,
+          "replay_capacity": 20000,
+          "learning_starts": 1000,
+          "train_every": 4,
+          "target_update_every": 250,
+          "epsilon_start": 1.0,
+          "epsilon_end": 0.05,
+          "epsilon_decay_steps": 80000,
+          "reward_scale": 0.1,
+          "grad_clip": 10.0,
+          "double_dqn": false,
+          "mask_actions": true,
+          "navigation_features": true,
+          "wall_features": true,
+          "local_wall_features": false,
+          "seed": 20000,
+          "device": "cpu",
+          "num_threads": 1
+        },
+        "environment": {
+          "environment_name": "ghosts",
+          "grid_size": 10,
+          "max_steps": 200,
+          "num_ghosts": 2,
+          "stability_rate": 0.75
+        },
+        "episodes": 6000,
+        "eval_seed": 1000000,
+        "eval_episodes": 100
+      },
+      "input_size": 362,
+      "parameters": 63492,
+      "final_environment_steps": 344554,
+      "selected_validation": {
+        "Episodes": 100,
+        "Mean-score": 507.6,
+        "Std-score": 146.28821696993379,
+        "Mean-reward": 391.66,
+        "Mean-steps": 69.77,
+        "Mean-food-fraction": 0.846,
+        "Win-rate": 0.57,
+        "Death-rate": 0.43,
+        "Min-steps-on-win": 67
+      },
+      "timing": {
+        "total_seconds": 286.20628241600207,
+        "validation_seconds": 21.841176000009,
+        "environment_steps": 344554,
+        "episodes": 6000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "evaluation": {
+        "episodes": 300,
+        "seed": 70000,
+        "mean_score": 471.03333333333336,
+        "mean_reward": 353.94666666666666,
+        "mean_steps": 64.31333333333333,
+        "mean_loop_steps": 0.8833333333333333,
+        "loop_step_fraction": 0.01373483984658443,
+        "episodes_with_loops": 48,
+        "mean_longest_foodless_run": 7.733333333333333,
+        "win_rate": 0.5033333333333333,
+        "checkpoint": "outputs/dqn/wall-comparison/walls-seed20000/best.pt",
+        "checkpoint_episode": 4000,
+        "navigation_features": true,
+        "wall_features": true,
+        "local_wall_features": false,
+        "double_dqn": false
+      }
+    },
+    {
+      "variant": "no_walls",
+      "training_seed": 20000,
+      "settings": {
+        "config": {
+          "hidden_size": 128,
+          "learning_rate": 0.0005,
+          "gamma": 0.98,
+          "batch_size": 64,
+          "replay_capacity": 20000,
+          "learning_starts": 1000,
+          "train_every": 4,
+          "target_update_every": 250,
+          "epsilon_start": 1.0,
+          "epsilon_end": 0.05,
+          "epsilon_decay_steps": 80000,
+          "reward_scale": 0.1,
+          "grad_clip": 10.0,
+          "double_dqn": false,
+          "mask_actions": true,
+          "navigation_features": true,
+          "wall_features": false,
+          "local_wall_features": false,
+          "seed": 20000,
+          "device": "cpu",
+          "num_threads": 1
+        },
+        "environment": {
+          "environment_name": "ghosts",
+          "grid_size": 10,
+          "max_steps": 200,
+          "num_ghosts": 2,
+          "stability_rate": 0.75
+        },
+        "episodes": 6000,
+        "eval_seed": 1000000,
+        "eval_episodes": 100
+      },
+      "input_size": 262,
+      "parameters": 50692,
+      "final_environment_steps": 340931,
+      "selected_validation": {
+        "Episodes": 100,
+        "Mean-score": 541.3,
+        "Std-score": 138.91102449867947,
+        "Mean-reward": 418.81,
+        "Mean-steps": 98.22,
+        "Mean-food-fraction": 0.9021666666666667,
+        "Win-rate": 0.74,
+        "Death-rate": 0.23,
+        "Min-steps-on-win": 76
+      },
+      "timing": {
+        "total_seconds": 265.5391445409987,
+        "validation_seconds": 21.014033791001566,
+        "environment_steps": 340931,
+        "episodes": 6000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "evaluation": {
+        "episodes": 300,
+        "seed": 70000,
+        "mean_score": 523.9666666666667,
+        "mean_reward": 393.94,
+        "mean_steps": 98.39333333333333,
+        "mean_loop_steps": 3.4566666666666666,
+        "loop_step_fraction": 0.03513110644352598,
+        "episodes_with_loops": 147,
+        "mean_longest_foodless_run": 24.266666666666666,
+        "win_rate": 0.6466666666666666,
+        "checkpoint": "outputs/dqn/wall-comparison/no_walls-seed20000/best.pt",
+        "checkpoint_episode": 1000,
+        "navigation_features": true,
+        "wall_features": false,
+        "local_wall_features": false,
+        "double_dqn": false
+      }
+    }
+  ],
+  "aggregate": {
+    "walls": {
+      "mean_score": {
+        "mean": 486.2888888888889,
+        "sample_std": 14.291657758338642
+      },
+      "mean_reward": {
+        "mean": 372.4922222222222,
+        "sample_std": 17.16086385203695
+      },
+      "win_rate": {
+        "mean": 0.5511111111111111,
+        "sample_std": 0.04141032256352052
+      },
+      "loop_step_fraction": {
+        "mean": 0.010288817535224343,
+        "sample_std": 0.0031924780027276435
+      },
+      "mean_steps": {
+        "mean": 66.13111111111111,
+        "sample_std": 1.7069964959064918
+      },
+      "mean_longest_foodless_run": {
+        "mean": 7.777777777777778,
+        "sample_std": 0.6844164857204461
+      }
+    },
+    "no_walls": {
+      "mean_score": {
+        "mean": 511.64444444444445,
+        "sample_std": 35.778490331068625
+      },
+      "mean_reward": {
+        "mean": 384.2266666666667,
+        "sample_std": 21.509756959213764
+      },
+      "win_rate": {
+        "mean": 0.5988888888888889,
+        "sample_std": 0.054194437325587506
+      },
+      "loop_step_fraction": {
+        "mean": 0.034007327843896575,
+        "sample_std": 0.024420634623979885
+      },
+      "mean_steps": {
+        "mean": 91.76444444444445,
+        "sample_std": 26.78575436751851
+      },
+      "mean_longest_foodless_run": {
+        "mean": 21.691111111111113,
+        "sample_std": 14.176569218778386
+      }
+    },
+    "local_walls": {
+      "mean_score": {
+        "mean": 512.5666666666666,
+        "sample_std": 20.35356916557334
+      },
+      "mean_reward": {
+        "mean": 386.5877777777778,
+        "sample_std": 10.946558227910572
+      },
+      "win_rate": {
+        "mean": 0.6088888888888889,
+        "sample_std": 0.054806055356171245
+      },
+      "loop_step_fraction": {
+        "mean": 0.034410359831507614,
+        "sample_std": 0.023314710922180334
+      },
+      "mean_steps": {
+        "mean": 90.27111111111111,
+        "sample_std": 20.4739469498117
+      },
+      "mean_longest_foodless_run": {
+        "mean": 20.314444444444444,
+        "sample_std": 11.950716079583467
+      }
+    }
+  },
+  "notes": [
+    "Aggregate statistics weight each training seed equally; standard deviation is across trained models.",
+    "Same fixed maze, 6000 episodes, hyperparameters and validation selection rule. Interaction counts vary.",
+    "Navigation features and action masks still use walls in every condition.",
+    "Validation chooses best mean reward; final test is not used to select checkpoints.",
+    "Three training seeds do not establish a universal advantage or unseen-map generalization.",
+    "Concurrent runs share CPU resources. Timings are not isolated speed benchmarks; old runs have null timing."
+  ],
+  "date": "2026-10-12",
+  "tests_passed": 53,
+  "visual_smoke": "Bundled local-wall seed-0 model completed a Pygame episode with dummy video/audio drivers: 92 steps, score 560.",
+  "decision": "Keep the existing DQN default. Publish dqn_local as an optional compact preset; the local bits did not consistently reduce oscillation versus no raw walls across three seeds."
+}

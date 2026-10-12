@@ -109,6 +109,42 @@ class NavigationTests(unittest.TestCase):
             self.assertEqual(loaded.encoder.input_size, 158)
             np.testing.assert_array_equal(original.q_values(self.obs), loaded.q_values(self.obs))
 
+    def test_local_wall_bits_follow_actions_and_ignore_food_and_ghosts(self):
+        np.testing.assert_array_equal(StateEncoder.local_walls(self.obs.map), [1, 1, 0, 1])
+        self.obs.map.ghost_positions = {Position(1, 2)}
+        self.obs.map.pellets = {Position(1, 2)}
+        np.testing.assert_array_equal(StateEncoder.local_walls(self.obs.map), [1, 1, 0, 1])
+        self.obs.map.walls.remove(Position(2, 1))
+        self.obs.map.walls.add(Position(1, 2))
+        np.testing.assert_array_equal(StateEncoder.local_walls(self.obs.map), [1, 0, 1, 1])
+
+    def test_local_bits_append_without_changing_existing_inputs(self):
+        for walls in (False, True):
+            for navigation in (False, True):
+                baseline = StateEncoder(6, 20, wall_features=walls, navigation_features=navigation)
+                local = StateEncoder(6, 20, wall_features=walls, navigation_features=navigation,
+                                     local_wall_features=True)
+                vector = local(self.obs)
+                self.assertEqual(vector.shape, (baseline.input_size + 4,))
+                np.testing.assert_array_equal(vector[:-4], baseline(self.obs))
+                np.testing.assert_array_equal(vector[-4:], [1, 1, 0, 1])
+
+    def test_local_model_roundtrip_and_previous_checkpoint_compatibility(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'model.pt'
+            for local_walls in (False, True):
+                original = DQNAgent(self.env, DQNConfig(navigation_features=True,
+                                    wall_features=False, local_wall_features=local_walls))
+                original.save_model(path)
+                if not local_walls:
+                    payload = torch.load(path, weights_only=True)
+                    del payload['config']['local_wall_features']
+                    torch.save(payload, path)
+                loaded = DQNAgent.from_checkpoint(path, self.env)
+                self.assertEqual(loaded.config.local_wall_features, local_walls)
+                self.assertEqual(loaded.encoder.input_size, 138 if local_walls else 134)
+                np.testing.assert_array_equal(original.q_values(self.obs), loaded.q_values(self.obs))
+
 
 class LoopMeasurementTests(unittest.TestCase):
     class Alternator:

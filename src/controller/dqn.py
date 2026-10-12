@@ -4,6 +4,7 @@ from collections import deque
 from pathlib import Path
 import json
 import random
+from time import perf_counter
 
 import numpy as np
 import torch
@@ -33,6 +34,7 @@ class DQNConfig:
     mask_actions: bool = True
     navigation_features: bool = False
     wall_features: bool = True
+    local_wall_features: bool = False
     seed: int = 0
     device: str = "cpu"  # Small MLPs are usually faster on CPU for this game.
     num_threads: int = 1
@@ -54,7 +56,7 @@ class StateEncoder:
     VERSION = 1
 
     def __init__(self, grid_size, max_steps, stability_rate=0.0, navigation_features=False,
-                 wall_features=True):
+                 wall_features=True, local_wall_features=False):
         if grid_size < 3 or max_steps <= 0:
             raise ValueError("Invalid grid size or episode limit")
         self.grid_size = grid_size
@@ -62,7 +64,17 @@ class StateEncoder:
         self.stability_rate = stability_rate
         self.navigation_features = navigation_features
         self.wall_features = wall_features
-        self.input_size = (2 + int(wall_features)) * grid_size * grid_size + 6 * 8 + 2 + (12 if navigation_features else 0)
+        self.local_wall_features = local_wall_features
+        self.input_size = ((2 + int(wall_features)) * grid_size * grid_size + 6 * 8 + 2
+                           + (12 if navigation_features else 0) + (4 if local_wall_features else 0))
+
+    @staticmethod
+    def local_walls(state):
+        """Explicit wall bits in ActionSpaceEnum order: up, right, down, left."""
+        return np.array([
+            state._state_after_action(action) in state.walls
+            for action in ActionSpaceEnum
+        ], dtype=np.float32)
 
     @staticmethod
     def distance_map(state, sources):
@@ -124,6 +136,8 @@ class StateEncoder:
                  np.array([time_left, self.stability_rate], dtype=np.float32)]
         if self.navigation_features:
             parts.append(self.navigation(state))
+        if self.local_wall_features:
+            parts.append(self.local_walls(state))
         return np.concatenate(parts)
 
 
@@ -190,7 +204,7 @@ class DQNAgent(Controller):
         self.environment_spec = environment_spec(environment)
         self.encoder = StateEncoder(environment.grid_size, environment.max_steps,
                                     self.environment_spec.get("stability_rate", 0.0),
-                                    cfg.navigation_features, cfg.wall_features)
+                                    cfg.navigation_features, cfg.wall_features, cfg.local_wall_features)
         if cfg.device == "auto":
             device = "cuda" if torch.cuda.is_available() else (
                 "mps" if torch.backends.mps.is_available() else "cpu")
@@ -320,6 +334,8 @@ class DQNAgent(Controller):
                "episodes": episodes, "eval_seed": eval_seed, "eval_episodes": eval_episodes}
         (output / "run.json").write_text(json.dumps(run, indent=2) + "\n")
         best_reward = -float("inf")
+        started = perf_counter()
+        validation_seconds = 0.0
         with (output / "training.jsonl").open("w") as log:
             for episode in range(episodes):
                 random.seed(self.config.seed + episode)
@@ -346,7 +362,9 @@ class DQNAgent(Controller):
                        "loss": float(np.mean(losses)) if losses else None}
                 if self.episodes % eval_every == 0 or episode == episodes - 1:
                     self.online.eval()
+                    validation_started = perf_counter()
                     metrics = evaluate_algorithm(validation_env, self, eval_episodes, seed=eval_seed)
+                    validation_seconds += perf_counter() - validation_started
                     row["validation"] = metrics
                     if metrics["Mean-reward"] > best_reward:
                         best_reward = metrics["Mean-reward"]
@@ -355,7 +373,17 @@ class DQNAgent(Controller):
                     print(f"Episode {self.episodes}/{episodes} | steps {self.environment_steps} | "
                           f"epsilon {self.epsilon:.3f} | validation score {metrics['Mean-score']:.1f} | "
                           f"reward {metrics['Mean-reward']:.1f} | wins {metrics['Win-rate']:.0%}", flush=True)
+                row['elapsed_seconds'] = perf_counter() - started
                 log.write(json.dumps(row) + "\n")
                 log.flush()
         self.online.eval()
+        (output / 'timing.json').write_text(json.dumps({
+            'total_seconds': perf_counter() - started,
+            'validation_seconds': validation_seconds,
+            'environment_steps': self.environment_steps,
+            'episodes': episodes,
+            'device': str(self.device),
+            'num_threads': self.config.num_threads,
+            'scope': 'Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation.',
+        }, indent=2) + '\n')
         return output / "best.pt"

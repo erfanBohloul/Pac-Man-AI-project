@@ -73,6 +73,7 @@ def main():
     result['checkpoint_episode'] = agent.episodes
     result['navigation_features'] = agent.config.navigation_features
     result['wall_features'] = agent.config.wall_features
+    result['local_wall_features'] = agent.config.local_wall_features
     result['double_dqn'] = agent.config.double_dqn
     path = Path(args.output)
     path.parent.mkdir(parents=True, exist_ok=True)

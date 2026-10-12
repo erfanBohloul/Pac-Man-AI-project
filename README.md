@@ -33,8 +33,8 @@ $$
 written to row `y`, column `x`. This grid is an observation encoding, not the
 complete simulator state: ghost directions are stored separately in
 `map.ghost_position_to_prev_action`, and pellets under ghosts remain in
-`map.pellets`. A future DQN encoder should include those features and the
-remaining episode time.
+`map.pellets`. The DQN encoder includes those features and the remaining episode
+time in separate inputs; see [the DQN guide](docs/dqn.md).
 
 ### Action Space $\mathcal{A}$
 
@@ -158,10 +158,15 @@ python -m unittest discover -s test -p '*_test.py' -v
 For the new DQN implementation, training, saved models, benchmarks and visual
 playback, see [the DQN guide](docs/dqn.md).
 
+The `controller=dqn_local` preset uses four adjacent-wall indicators in place
+of the full wall plane (`266 -> 128 -> 128 -> 4` on the default 10 x 10 maze).
+See [the local-wall experiment](docs/dqn-local-walls.md) for training, visual
+playback and the matched-seed comparison.
+
 1. Clone this repository:
    ```bash
-   git clone https://github.com/Alexander-Ploskin/Pac-Man.git
-   cd Pac-Man
+   git clone --branch DQN https://github.com/erfanBohloul/Pac-Man-AI-project.git
+   cd Pac-Man-AI-project
    ```
 2. Install the dependencies:
    ```bash

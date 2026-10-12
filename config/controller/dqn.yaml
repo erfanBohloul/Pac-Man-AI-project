@@ -24,6 +24,7 @@ mask_actions: true
 navigation_features: true
 # Disable only the raw wall plane; BFS distances and legal moves still use walls.
 wall_features: true
+local_wall_features: false
 seed: ${seed}
 device: cpu
 num_threads: 1

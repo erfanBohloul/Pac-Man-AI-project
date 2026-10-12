@@ -57,6 +57,9 @@ The output directory contains:
   validation metrics are included at each evaluation interval.
 - `best.pt`: the policy with the highest mean validation reward.
 - `last.pt`: the policy at the last evaluation interval, including the final episode.
+- `timing.json`: measured training-loop wall time, including validation and file
+  writes, plus separate validation time. New episode logs also include cumulative
+  `elapsed_seconds`. Historical runs made before timing support lack these fields.
 
 After training, the CLI loads `best.pt` for evaluation or display. A checkpoint
 contains the network architecture, encoder version, environment specification,
@@ -299,6 +302,9 @@ If no audio device is available, the game warns once and continues silently.
 GIF recordings remain silent because GIF does not support audio.
 
 ## Fixed-maze wall-plane ablation (2026-10-12)
+
+The follow-up with four explicit local wall bits and multiple training seeds is
+documented in [the local-wall experiment](dqn-local-walls.md).
 
 The default network is `362 -> 128 -> 128 -> 4` on the 10 x 10 maze,
 with ReLU after each hidden layer and 63,492 trainable parameters. For a single
