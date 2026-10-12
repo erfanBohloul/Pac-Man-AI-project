@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-12",
+  "experiment": "Remove only the constant raw wall plane on a fixed 10x10 maze.",
+  "tests_passed": 50,
+  "conditions": {
+    "with_walls": {
+      "architecture": [
+        362,
+        128,
+        128,
+        4
+      ],
+      "parameters": 63492,
+      "training": {
+        "config": {
+          "hidden_size": 128,
+          "learning_rate": 0.0005,
+          "gamma": 0.98,
+          "batch_size": 64,
+          "replay_capacity": 20000,
+          "learning_starts": 1000,
+          "train_every": 4,
+          "target_update_every": 250,
+          "epsilon_start": 1.0,
+          "epsilon_end": 0.05,
+          "epsilon_decay_steps": 80000,
+          "reward_scale": 0.1,
+          "grad_clip": 10.0,
+          "double_dqn": false,
+          "mask_actions": true,
+          "navigation_features": true,
+          "wall_features": true,
+          "seed": 0,
+          "device": "cpu",
+          "num_threads": 1
+        },
+        "environment": {
+          "environment_name": "ghosts",
+          "grid_size": 10,
+          "max_steps": 200,
+          "num_ghosts": 2,
+          "stability_rate": 0.75
+        },
+        "episodes": 6000,
+        "eval_seed": 1000000,
+        "eval_episodes": 100
+      },
+      "final_environment_steps": 342992,
+      "selected_checkpoint_validation": {
+        "Episodes": 100,
+        "Mean-score": 520.1,
+        "Std-score": 144.74983644728292,
+        "Mean-reward": 413.98,
+        "Mean-steps": 68.67,
+        "Mean-food-fraction": 0.8668333333333333,
+        "Win-rate": 0.65,
+        "Death-rate": 0.35,
+        "Min-steps-on-win": 67
+      },
+      "selected_checkpoint_environment_steps": 251606,
+      "evaluation": {
+        "episodes": 300,
+        "seed": 60000,
+        "mean_score": 486.1333333333333,
+        "mean_reward": 375.0366666666667,
+        "mean_steps": 64.00333333333333,
+        "mean_loop_steps": 0.32666666666666666,
+        "loop_step_fraction": 0.005103900838497995,
+        "episodes_with_loops": 22,
+        "mean_longest_foodless_run": 6.25,
+        "win_rate": 0.56,
+        "checkpoint": "outputs/dqn/navigation-seed0/best.pt",
+        "checkpoint_episode": 4500,
+        "navigation_features": true,
+        "wall_features": true,
+        "double_dqn": false
+      }
+    },
+    "without_walls": {
+      "architecture": [
+        262,
+        128,
+        128,
+        4
+      ],
+      "parameters": 50692,
+      "training": {
+        "config": {
+          "hidden_size": 128,
+          "learning_rate": 0.0005,
+          "gamma": 0.98,
+          "batch_size": 64,
+          "replay_capacity": 20000,
+          "learning_starts": 1000,
+          "train_every": 4,
+          "target_update_every": 250,
+          "epsilon_start": 1.0,
+          "epsilon_end": 0.05,
+          "epsilon_decay_steps": 80000,
+          "reward_scale": 0.1,
+          "grad_clip": 10.0,
+          "double_dqn": false,
+          "mask_actions": true,
+          "navigation_features": true,
+          "wall_features": false,
+          "seed": 0,
+          "device": "cpu",
+          "num_threads": 1
+        },
+        "environment": {
+          "environment_name": "ghosts",
+          "grid_size": 10,
+          "max_steps": 200,
+          "num_ghosts": 2,
+          "stability_rate": 0.75
+        },
+        "episodes": 6000,
+        "eval_seed": 1000000,
+        "eval_episodes": 100
+      },
+      "final_environment_steps": 334830,
+      "selected_checkpoint_validation": {
+        "Episodes": 100,
+        "Mean-score": 533.1,
+        "Std-score": 140.82509389560892,
+        "Mean-reward": 399.44,
+        "Mean-steps": 108.3,
+        "Mean-food-fraction": 0.8885,
+        "Win-rate": 0.61,
+        "Death-rate": 0.24,
+        "Min-steps-on-win": 68
+      },
+      "selected_checkpoint_environment_steps": 31831,
+      "evaluation": {
+        "episodes": 300,
+        "seed": 60000,
+        "mean_score": 531.3,
+        "mean_reward": 386.9033333333333,
+        "mean_steps": 116,
+        "mean_loop_steps": 7.773333333333333,
+        "loop_step_fraction": 0.06701149425287356,
+        "episodes_with_loops": 172,
+        "mean_longest_foodless_run": 35.99666666666667,
+        "win_rate": 0.5333333333333333,
+        "checkpoint": "outputs/dqn/no-walls-seed0/best.pt",
+        "checkpoint_episode": 1000,
+        "navigation_features": true,
+        "wall_features": false,
+        "double_dqn": false
+      }
+    }
+  },
+  "selection": "Highest validation mean reward, checked every 500 episodes on seeds 1000000-1000099; no selection using test scores.",
+  "evaluation": "Both selected models evaluated on seeds 60000-60299, not used in training or checkpoint selection.",
+  "decision": "Keep wall features enabled by default. No-wall pilot is smaller and scores higher, but wins slightly less often and oscillates more.",
+  "limitations": [
+    "Single training seed, single fixed maze; no statistically reliable advantage established.",
+    "Same 6000-episode budget; number of interactions and best checkpoint episode differ.",
+    "Input shape changes parameter initialization and trajectories even with the same random seed.",
+    "BFS features and legal-action masks still use walls; the food map also reflects maze geometry. This is not removal of all wall information.",
+    "Loop metric counts sustained two-cell alternations without eating; not all reversals are necessarily mistakes."
+  ]
+}

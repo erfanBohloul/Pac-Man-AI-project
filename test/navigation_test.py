@@ -63,6 +63,39 @@ class NavigationTests(unittest.TestCase):
             self.assertTrue(loaded.config.navigation_features)
             np.testing.assert_array_equal(agent.q_values(self.obs), loaded.q_values(self.obs))
 
+    def test_omitting_walls_preserves_every_other_feature(self):
+        for navigation in (False, True):
+            full = StateEncoder(6, 20, navigation_features=navigation)
+            reduced = StateEncoder(6, 20, navigation_features=navigation, wall_features=False)
+            np.testing.assert_array_equal(reduced(self.obs), full(self.obs)[36:])
+            self.assertEqual(reduced(self.obs).shape, (reduced.input_size,))
+        # Navigation features still respect walls when the raw plane is omitted.
+        np.testing.assert_array_equal(reduced(self.obs)[-12:].reshape(4, 3)[Action.RIGHT], [-1, -1, -1])
+
+    def test_no_wall_checkpoint_reloads_and_masks_wall_actions(self):
+        agent = DQNAgent(self.env, DQNConfig(navigation_features=True, wall_features=False))
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'model.pt'
+            agent.save_model(path)
+            loaded = DQNAgent.from_checkpoint(path, self.env)
+            self.assertFalse(loaded.config.wall_features)
+            self.assertEqual(loaded.encoder.input_size, 134)
+            self.assertFalse(loaded.action_mask(self.obs)[Action.RIGHT])
+            np.testing.assert_array_equal(agent.q_values(self.obs), loaded.q_values(self.obs))
+
+    def test_navigation_checkpoint_without_wall_setting_retains_wall_plane(self):
+        original = DQNAgent(self.env, DQNConfig(navigation_features=True))
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'old-navigation.pt'
+            original.save_model(path)
+            payload = torch.load(path, weights_only=True)
+            del payload['config']['wall_features']
+            torch.save(payload, path)
+            loaded = DQNAgent.from_checkpoint(path, self.env)
+            self.assertTrue(loaded.config.wall_features)
+            self.assertEqual(loaded.encoder.input_size, 170)
+            np.testing.assert_array_equal(original.q_values(self.obs), loaded.q_values(self.obs))
+
     def test_checkpoints_without_the_new_setting_keep_the_original_encoder(self):
         original = DQNAgent(self.env, DQNConfig())
         with tempfile.TemporaryDirectory() as directory:

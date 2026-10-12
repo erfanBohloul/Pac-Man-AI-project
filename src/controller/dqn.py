@@ -32,6 +32,7 @@ class DQNConfig:
     double_dqn: bool = False
     mask_actions: bool = True
     navigation_features: bool = False
+    wall_features: bool = True
     seed: int = 0
     device: str = "cpu"  # Small MLPs are usually faster on CPU for this game.
     num_threads: int = 1
@@ -52,14 +53,16 @@ class DQNConfig:
 class StateEncoder:
     VERSION = 1
 
-    def __init__(self, grid_size, max_steps, stability_rate=0.0, navigation_features=False):
+    def __init__(self, grid_size, max_steps, stability_rate=0.0, navigation_features=False,
+                 wall_features=True):
         if grid_size < 3 or max_steps <= 0:
             raise ValueError("Invalid grid size or episode limit")
         self.grid_size = grid_size
         self.max_steps = max_steps
         self.stability_rate = stability_rate
         self.navigation_features = navigation_features
-        self.input_size = 3 * grid_size * grid_size + 6 * 8 + 2 + (12 if navigation_features else 0)
+        self.wall_features = wall_features
+        self.input_size = (2 + int(wall_features)) * grid_size * grid_size + 6 * 8 + 2 + (12 if navigation_features else 0)
 
     @staticmethod
     def distance_map(state, sources):
@@ -115,7 +118,9 @@ class StateEncoder:
             direction = state.ghost_position_to_prev_action.get(position)
             slot[3 + (4 if direction is None else int(direction))] = 1
         time_left = max(0.0, 1 - observation.step_count / self.max_steps)
-        parts = [board.ravel(), ghosts.ravel(),
+        # On a fixed maze the wall plane is constant; omit it for an ablation.
+        board_features = board if self.wall_features else board[1:]
+        parts = [board_features.ravel(), ghosts.ravel(),
                  np.array([time_left, self.stability_rate], dtype=np.float32)]
         if self.navigation_features:
             parts.append(self.navigation(state))
@@ -184,7 +189,8 @@ class DQNAgent(Controller):
         cfg = self.config
         self.environment_spec = environment_spec(environment)
         self.encoder = StateEncoder(environment.grid_size, environment.max_steps,
-                                    self.environment_spec.get("stability_rate", 0.0), cfg.navigation_features)
+                                    self.environment_spec.get("stability_rate", 0.0),
+                                    cfg.navigation_features, cfg.wall_features)
         if cfg.device == "auto":
             device = "cuda" if torch.cuda.is_available() else (
                 "mps" if torch.backends.mps.is_available() else "cpu")

@@ -297,3 +297,94 @@ shows the sound state. Audio is enabled by default at 25% volume. Override with
 Audio runs only during visual playback, not training or numerical evaluation.
 If no audio device is available, the game warns once and continues silently.
 GIF recordings remain silent because GIF does not support audio.
+
+## Fixed-maze wall-plane ablation (2026-10-12)
+
+The default network is `362 -> 128 -> 128 -> 4` on the 10 x 10 maze,
+with ReLU after each hidden layer and 63,492 trainable parameters. For a single
+fixed maze, its 100 raw wall indicators are constant across states. In the first
+linear layer their contribution can be absorbed into the bias, so removing them
+does not reduce the network's representational capacity on that fixed maze.
+Training dynamics can nevertheless change; this does not predict better scores.
+
+Set `controller.wall_features=false` to omit exactly the raw wall plane. The
+network becomes `262 -> 128 -> 128 -> 4`, with 50,692 parameters (12,800 fewer,
+about 20.2%). It retains the food and Pac-Man planes, ghost metadata, remaining
+time, ghost stability, and all 12 navigation features. BFS distances and legal
+action masks still use the real walls. This is **not** removal of all wall
+information. In particular, the initial food plane also reflects the maze.
+
+Existing checkpoints default to retaining the wall plane when the saved setting
+is absent. Loading a checkpoint restores its own feature configuration; use a
+fresh training run to test a new input shape. The default preset remains unchanged
+so this experiment does not silently replace the existing agent.
+
+To reproduce the no-wall run with the navigation baseline's training settings:
+
+```bash
+python cli.py controller=dqn environment=ghosts \
+  controller.wall_features=false controller.train_episodes=6000 \
+  controller.eval_every=500 controller.eval_episodes=100 \
+  controller.epsilon_decay_steps=80000 \
+  controller.output_dir=outputs/dqn/no-walls-seed0 \
+  num_episodes=300 eval_seed=60000
+```
+
+Training uses seed 0 and 6000 episodes in both conditions; checkpoint selection
+uses mean reward on validation seeds 1000000-1000099 every 500 episodes. Compare
+the selected checkpoints on fresh held-out seeds 60000-60299:
+
+```bash
+python -m scripts.inspect_dqn_loops \
+  --checkpoint outputs/dqn/navigation-seed0/best.pt \
+  --episodes 300 --seed 60000 \
+  --output outputs/dqn/navigation-seed0/wall-ablation-evaluation.json
+python -m scripts.inspect_dqn_loops \
+  --checkpoint outputs/dqn/no-walls-seed0/best.pt \
+  --episodes 300 --seed 60000 \
+  --output outputs/dqn/no-walls-seed0/wall-ablation-evaluation.json
+```
+
+This is a single-training-seed pilot on the same fixed map. Equal training
+budgets are measured in episodes, not environment steps, since policies survive
+for different lengths of time. The input shape also changes initialization and
+subsequent trajectories despite using the same seed. Multiple training seeds
+are needed before claiming a reliable performance advantage.
+
+### Pilot results and decision
+
+Both models finished 6000 training episodes with identical configuration except
+`wall_features`. Validation selected episode 4500 with walls and episode 1000
+without walls. The following results use the same 300 held-out seeds:
+
+| Metric | With raw wall plane | Without raw wall plane |
+| --- | ---: | ---: |
+| Input dimensions | 362 | 262 |
+| Trainable parameters | 63,492 | 50,692 |
+| Mean score | 486.13 | 531.30 |
+| Mean reward | 375.04 | 386.90 |
+| Win rate | 56.00% | 53.33% |
+| Mean episode length | 64.00 | 116.00 |
+| Flagged loop steps / all steps | 0.51% | 6.70% |
+| Episodes with flagged loops | 22 / 300 | 172 / 300 |
+| Mean longest run without food | 6.25 | 36.00 |
+
+The no-wall model uses about 20.2% fewer parameters and collected more food on
+average, but it did not improve win rate and repeated two-cell oscillations more
+often. Keep the existing wall-enabled checkpoint for visual demonstrations;
+retain this option as an experimental simplification. Do not claim either
+configuration is universally better from this single-seed experiment. A later
+multi-seed comparison should precede a default change.
+
+All 50 tests passed, including checkpoint compatibility, exact preservation of
+all other features, and legal-action masking without the raw wall plane. The
+compact machine-readable report is `dqn-wall-ablation.json`; weights and complete
+training/evaluation logs remain in the ignored local outputs directories.
+
+To view the experimental no-wall model:
+
+```bash
+python cli.py controller=dqn controller.mode=load \
+  controller.model_path=outputs/dqn/no-walls-seed0/best.pt \
+  environment=ghosts eval=false framerate=8
+```
