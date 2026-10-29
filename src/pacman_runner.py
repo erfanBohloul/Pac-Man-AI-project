@@ -4,7 +4,7 @@ import json
 from uuid import uuid4
 from src.environment import BasicPacmanEnvironment, GhostsPacmanEnvironment
 from src.drawer import PygameDrawer
-from src.controller import BasicController, QLearnAgent, ValueIterationAgent, DQNAgent, DQNConfig
+from src.controller import BasicController, QLearnAgent, ValueIterationAgent, DQNAgent, DQNConfig, MCTSAgent
 from src.evaluation import evaluate_algorithm
 
 
@@ -195,6 +195,11 @@ def create_dqn_controller(environment, mode, model_path, output_dir, train_episo
     return DQNAgent.from_checkpoint(best, environment, device=controller.config.device)
 
 
+def create_mcts_controller(environment, **params):
+    """Create a search controller bound to the running environment."""
+    return MCTSAgent(environment, **params)
+
+
 def create_controller(environment, controller_type, **params):
     """
     Create and return the specified type of game controller.
@@ -221,6 +226,8 @@ def create_controller(environment, controller_type, **params):
         return NeuralNetworkPolicy(**params)
     elif controller_type == 'dqn':
         return create_dqn_controller(environment, **params)
+    elif controller_type == 'mcts':
+        return create_mcts_controller(environment, **params)
     else:
         raise ValueError(f"Invalid controller type: {controller_type}")
 

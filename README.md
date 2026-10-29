@@ -158,6 +158,16 @@ python -m unittest discover -s test -p '*_test.py' -v
 For the new DQN implementation, training, saved models, benchmarks and visual
 playback, see [the DQN guide](docs/dqn.md).
 
+An online Monte Carlo Tree Search controller is also available with the
+`controller=mcts` preset. It uses UCT selection and random rollouts from copied
+environment states; adjust its search budget with `controller.iterations` and
+`controller.max_depth`. For example, launch it in the visual ghosts environment
+with:
+
+```bash
+python cli.py controller=mcts environment=ghosts eval=false
+```
+
 The `controller=dqn_local` preset uses four adjacent-wall indicators in place
 of the full wall plane (`266 -> 128 -> 128 -> 4` on the default 10 x 10 maze).
 See [the local-wall experiment](docs/dqn-local-walls.md) for training, visual

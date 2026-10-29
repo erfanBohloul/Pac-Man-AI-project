@@ -1,0 +1,6 @@
+type: mcts
+iterations: 250
+exploration: 1.4
+max_depth: 30
+gamma: 0.98
+seed: ${seed}
