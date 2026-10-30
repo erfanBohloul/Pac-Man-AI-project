@@ -168,6 +168,16 @@ with:
 python cli.py controller=mcts environment=ghosts eval=false
 ```
 
+The `controller=dqn_mcts` preset combines a trained DQN checkpoint with MCTS.
+The DQN supplies action priors, guides rollout actions, and estimates value at
+the search depth limit. The default preset loads the included local-wall DQN
+checkpoint, which expects the default 10x10 ghosts environment. Override
+`controller.model_path` to use another compatible DQN checkpoint. For example:
+
+```bash
+python cli.py controller=dqn_mcts environment=ghosts eval=false
+```
+
 The `controller=dqn_local` preset uses four adjacent-wall indicators in place
 of the full wall plane (`266 -> 128 -> 128 -> 4` on the default 10 x 10 maze).
 See [the local-wall experiment](docs/dqn-local-walls.md) for training, visual

@@ -58,6 +58,11 @@ def main(cfg):
             key: value for key, value in OmegaConf.to_container(cfg.controller, resolve=True).items()
             if key != 'type'
         })
+    elif controller == 'dqn_mcts':
+        controller_args.update({
+            key: value for key, value in OmegaConf.to_container(cfg.controller, resolve=True).items()
+            if key != 'type'
+        })
     elif controller == "reinforce":
         controller_args.update({
             'model_path': cfg.controller.model_path,

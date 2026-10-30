@@ -200,6 +200,13 @@ def create_mcts_controller(environment, **params):
     return MCTSAgent(environment, **params)
 
 
+def create_dqn_mcts_controller(environment, model_path, device='cpu', **params):
+    """Load a trained DQN and use it to guide MCTS search."""
+    from src.controller import DQNAgent
+    policy = DQNAgent.from_checkpoint(model_path, environment, device=device)
+    return MCTSAgent(environment, dqn_agent=policy, **params)
+
+
 def create_controller(environment, controller_type, **params):
     """
     Create and return the specified type of game controller.
@@ -228,6 +235,8 @@ def create_controller(environment, controller_type, **params):
         return create_dqn_controller(environment, **params)
     elif controller_type == 'mcts':
         return create_mcts_controller(environment, **params)
+    elif controller_type == 'dqn_mcts':
+        return create_dqn_mcts_controller(environment, **params)
     else:
         raise ValueError(f"Invalid controller type: {controller_type}")
 

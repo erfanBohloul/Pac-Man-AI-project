@@ -1,0 +1,10 @@
+type: dqn_mcts
+model_path: checkpoints/dqn-local/seed0.pt
+device: cpu
+iterations: 100
+exploration: 1.4
+max_depth: 30
+gamma: 0.98
+seed: ${seed}
+prior_temperature: 1.0
+rollout_epsilon: 0.1
