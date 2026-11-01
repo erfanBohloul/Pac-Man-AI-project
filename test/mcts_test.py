@@ -1,55 +1,69 @@
 import unittest
-from types import SimpleNamespace
+from unittest.mock import patch
 
-import numpy as np
-
+from src.controller import BasicController
 from src.controller.mcts import MCTSAgent
 from src.environment import BasicPacmanEnvironment
+from src.pacman_runner import create_dqn_mcts_controller
 from src.state import ActionSpaceEnum
 
 
-class FixedPolicy:
-    def __init__(self, preferred=ActionSpaceEnum.UP, reward_scale=0.1):
+class FixedPolicyController:
+    """DQN-shaped controller stub for testing the shared rollout interface."""
+
+    def __init__(self, preferred=ActionSpaceEnum.UP):
         self.preferred = preferred
-        self.config = SimpleNamespace(reward_scale=reward_scale)
         self.calls = 0
 
-    def q_values(self, observation):
+    def get_action(self, observation):
         self.calls += 1
-        values = np.zeros(4, dtype=np.float32)
-        values[int(self.preferred)] = 1.0
-        return values
+        legal = observation.map.get_legal_actions()
+        return self.preferred if self.preferred in legal else legal[0]
 
 
-class DQNGuidedMCTSTests(unittest.TestCase):
-    def setUp(self):
-        self.environment = BasicPacmanEnvironment(grid_size=6, max_steps=20)
-        self.observation = self.environment.reset()
-        self.policy = FixedPolicy()
-        self.agent = MCTSAgent(
-            self.environment, iterations=12, max_depth=4, dqn_agent=self.policy,
-            seed=7,
-        )
+class DQNMCTSIntegrationTests(unittest.TestCase):
+    def test_factory_injects_loaded_dqn_into_the_shared_mcts_engine(self):
+        environment = BasicPacmanEnvironment(grid_size=6, max_steps=12)
+        policy = FixedPolicyController()
+        with patch("src.controller.DQNAgent.from_checkpoint", return_value=policy) as load:
+            agent = create_dqn_mcts_controller(
+                environment, "checkpoint.pt", device="cpu", iterations=4, max_depth=3,
+            )
 
-    def test_dqn_values_create_action_priors(self):
-        actions = self.environment.map.get_legal_actions()
-        node = self.agent._make_node(actions, self.observation)
+        load.assert_called_once_with("checkpoint.pt", environment, device="cpu")
+        self.assertIsInstance(agent, MCTSAgent)
+        self.assertIs(agent.rollout_controller, policy)
 
-        self.assertGreater(node.priors[ActionSpaceEnum.UP], node.priors[ActionSpaceEnum.DOWN])
-        self.assertAlmostEqual(sum(node.priors.values()), 1.0)
+    def test_dqn_rollout_policy_works_at_multiple_search_budgets(self):
+        budgets = ((1, 1), (5, 3), (10, 5), (30, 10))
+        for iterations, max_depth in budgets:
+            with self.subTest(iterations=iterations, max_depth=max_depth):
+                environment = BasicPacmanEnvironment(grid_size=6, max_steps=12)
+                observation = environment.reset()
+                policy = FixedPolicyController()
+                agent = MCTSAgent(
+                    environment, policy, iterations=iterations,
+                    max_depth=max_depth, seed=5,
+                )
+                before = agent._state_key(environment)
+                with patch.object(agent, "_simulate", wraps=agent._simulate) as simulate:
+                    action = agent.get_action(observation)
 
-    def test_search_returns_legal_action_without_mutating_live_game(self):
-        original_state = self.agent._state_key(self.environment)
-        action = self.agent.get_action(self.observation)
+                self.assertEqual(simulate.call_count, iterations)
+                self.assertIn(action, environment.map.get_legal_actions())
+                if max_depth > 1:
+                    self.assertGreater(policy.calls, 0)
+                else:
+                    self.assertEqual(policy.calls, 0)
+                self.assertEqual(before, agent._state_key(environment))
 
-        self.assertIn(action, self.environment.map.get_legal_actions())
-        self.assertEqual(original_state, self.agent._state_key(self.environment))
-        self.assertGreater(self.policy.calls, 0)
+    def test_vanilla_and_dqn_variants_are_the_same_search_class(self):
+        environment = BasicPacmanEnvironment(grid_size=6, max_steps=12)
+        vanilla = MCTSAgent(environment, BasicController(legal_only=True))
+        hybrid = MCTSAgent(environment, FixedPolicyController())
 
-    def test_depth_limit_bootstraps_in_environment_reward_units(self):
-        _, bootstrap = self.agent._rollout(self.environment, self.observation, self.agent.max_depth)
-
-        self.assertAlmostEqual(bootstrap, 10.0)
+        self.assertIs(type(vanilla), type(hybrid))
+        self.assertNotEqual(type(vanilla.rollout_controller), type(hybrid.rollout_controller))
 
 
 if __name__ == "__main__":

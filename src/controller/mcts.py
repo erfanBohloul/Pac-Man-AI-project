@@ -19,55 +19,39 @@ class _Edge:
 
 
 class _Node:
-    __slots__ = ("actions", "unexpanded", "visits", "priors")
+    __slots__ = ("actions", "unexpanded", "visits")
 
-    def __init__(self, actions, priors=None):
+    def __init__(self, actions):
         self.actions = {}
         self.unexpanded = list(actions)
         self.visits = 0
-        self.priors = priors or {action: 1 / len(actions) for action in actions} if actions else {}
 
 
 class MCTSAgent(Controller):
-    """Plan online with UCT, optionally guided by a trained DQN policy/value.
+    """Run UCT search using an injected controller for rollout actions.
 
     The environment is copied for every simulation, so search does not mutate
     the live game. Ghost moves remain stochastic and are sampled by the
-    environment's normal ``step`` implementation. With ``dqn_agent`` set,
-    its Q-values provide PUCT action priors, guide rollout actions, and
-    bootstrap value at the search depth limit.
+    environment's normal ``step`` implementation. The rollout controller is
+    the only policy difference between vanilla MCTS and guided MCTS variants.
     """
 
-    def __init__(self, environment, iterations=250, exploration=1.4,
-                 max_depth=30, gamma=0.98, seed=0, dqn_agent=None,
-                 prior_temperature=1.0, rollout_epsilon=0.1):
+    def __init__(self, environment, rollout_controller: Controller,
+                 iterations=250, exploration=1.4, max_depth=30,
+                 gamma=0.98, seed=0):
         if iterations <= 0 or max_depth <= 0:
             raise ValueError("iterations and max_depth must be positive")
         if exploration < 0 or not 0 <= gamma <= 1:
             raise ValueError("exploration must be non-negative and gamma in [0, 1]")
-        if prior_temperature <= 0 or not 0 <= rollout_epsilon <= 1:
-            raise ValueError("prior_temperature must be positive and rollout_epsilon in [0, 1]")
+        if not callable(getattr(rollout_controller, "get_action", None)):
+            raise TypeError("rollout_controller must provide get_action(observation)")
         self.environment = environment
+        self.rollout_controller = rollout_controller
         self.iterations = int(iterations)
         self.exploration = float(exploration)
         self.max_depth = int(max_depth)
         self.gamma = float(gamma)
         self.rng = random.Random(seed)
-        self.dqn_agent = dqn_agent
-        self.prior_temperature = float(prior_temperature)
-        self.rollout_epsilon = float(rollout_epsilon)
-
-    def _make_node(self, actions, observation):
-        if not actions:
-            return _Node(actions)
-        if self.dqn_agent is None:
-            return _Node(actions)
-        import numpy as np
-        values = self.dqn_agent.q_values(observation)[[int(action) for action in actions]]
-        values = values - np.max(values)
-        weights = np.exp(values / self.prior_temperature)
-        priors = {action: float(weight / weights.sum()) for action, weight in zip(actions, weights)}
-        return _Node(actions, priors)
 
     @staticmethod
     def _state_key(environment):
@@ -90,16 +74,21 @@ class MCTSAgent(Controller):
         return environment.map.get_legal_actions()
 
     def _select_edge(self, node):
-        log_parent = math.log(max(1, node.visits))
-        if self.dqn_agent is not None:
-            return max(
-                node.actions.items(),
-                key=lambda item: (
-                    item[1].value_sum / item[1].visits
-                    + self.exploration * node.priors[item[0]]
-                    * math.sqrt(node.visits) / (1 + item[1].visits)
-                ),
-            )
+        """Select by UCT; explicitly schedule unvisited child edges first.
+
+        In the normal tree flow expansion handles unvisited edges before this
+        method is called. The guard also keeps the formula defined if a node is
+        constructed or modified outside that flow.
+        """
+        if not node.actions:
+            raise ValueError("cannot select an edge from a node with no actions")
+        unvisited = [item for item in node.actions.items() if item[1].visits == 0]
+        if unvisited:
+            return self.rng.choice(unvisited)
+        if node.visits <= 0:
+            raise RuntimeError("visited child edges require a visited parent node")
+
+        log_parent = math.log(node.visits)
         return max(
             node.actions.items(),
             key=lambda item: (
@@ -114,26 +103,20 @@ class MCTSAgent(Controller):
             actions = self._legal_actions(environment)
             if not actions:
                 break
-            if self.dqn_agent is not None and self.rng.random() >= self.rollout_epsilon:
-                q_values = self.dqn_agent.q_values(observation)
-                action = max(actions, key=lambda candidate: q_values[int(candidate)])
-            else:
-                action = self.rng.choice(actions)
+            action = self.rollout_controller.get_action(observation)
+            if action not in actions:
+                raise ValueError(f"rollout controller selected illegal action: {action}")
             observation = environment.step(action)
             rewards.append(observation.reward)
             depth += 1
-        bootstrap = 0.0
-        if self.dqn_agent is not None and not environment.done and depth >= self.max_depth:
-            # DQN values use reward_scale units; MCTS backs up environment rewards.
-            scale = self.dqn_agent.config.reward_scale
-            bootstrap = max(self.dqn_agent.q_values(observation)[[int(a) for a in self._legal_actions(environment)]],
-                            default=0.0) / scale
-        return rewards, bootstrap
+        return rewards
 
     def _simulate(self, tree, root_key):
         environment = deepcopy(self.environment)
-        observation = Observation(0, environment.done, environment.score,
-                                 environment.step_count, environment.map)
+        observation = Observation(
+            reward=0, done=environment.done, score=environment.score,
+            step_count=environment.step_count, map=environment.map,
+        )
         node_key = root_key
         path = []
         rewards = []
@@ -149,7 +132,7 @@ class MCTSAgent(Controller):
                 depth += 1
                 child_key = self._state_key(environment)
                 if child_key not in tree:
-                    tree[child_key] = self._make_node(self._legal_actions(environment), observation)
+                    tree[child_key] = _Node(self._legal_actions(environment))
                 edge = _Edge()
                 node.actions[action] = edge
                 path.append((node, edge))
@@ -165,12 +148,11 @@ class MCTSAgent(Controller):
             path.append((node, edge))
             node_key = self._state_key(environment)
             if node_key not in tree:
-                tree[node_key] = self._make_node(self._legal_actions(environment), observation)
+                tree[node_key] = _Node(self._legal_actions(environment))
 
-        rollout_rewards, bootstrap = self._rollout(environment, observation, depth)
-        rewards.extend(rollout_rewards)
+        rewards.extend(self._rollout(environment, observation, depth))
         for start, (node, edge) in enumerate(path):
-            value = bootstrap
+            value = 0.0
             for reward in reversed(rewards[start:]):
                 value = reward + self.gamma * value
             edge.visits += 1
@@ -185,7 +167,7 @@ class MCTSAgent(Controller):
             return ActionSpaceEnum.UP
 
         root_key = self._state_key(self.environment)
-        tree = {root_key: self._make_node(legal, observation)}
+        tree = {root_key: _Node(legal)}
         for _ in range(self.iterations):
             self._simulate(tree, root_key)
 

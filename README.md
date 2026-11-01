@@ -159,18 +159,19 @@ For the new DQN implementation, training, saved models, benchmarks and visual
 playback, see [the DQN guide](docs/dqn.md).
 
 An online Monte Carlo Tree Search controller is also available with the
-`controller=mcts` preset. It uses UCT selection and random rollouts from copied
-environment states; adjust its search budget with `controller.iterations` and
-`controller.max_depth`. For example, launch it in the visual ghosts environment
-with:
+`controller=mcts` preset. It uses UCT selection and a legal, uniform-random
+rollout controller on copied environment states; adjust its search budget with
+`controller.iterations` and `controller.max_depth`. For example, launch it in
+the visual ghosts environment with:
 
 ```bash
 python cli.py controller=mcts environment=ghosts eval=false
 ```
 
-The `controller=dqn_mcts` preset combines a trained DQN checkpoint with MCTS.
-The DQN supplies action priors, guides rollout actions, and estimates value at
-the search depth limit. The default preset loads the included local-wall DQN
+The `controller=dqn_mcts` preset runs the same MCTS engine and search settings,
+but injects a trained DQN as the rollout controller. This keeps tree selection,
+expansion, reward backup, and search budget shared with vanilla MCTS; only the
+rollout policy changes. The default preset loads the included local-wall DQN
 checkpoint, which expects the default 10x10 ghosts environment. Override
 `controller.model_path` to use another compatible DQN checkpoint. For example:
 
