@@ -196,8 +196,10 @@ def create_dqn_controller(environment, mode, model_path, output_dir, train_episo
 
 
 def create_mcts_controller(environment, **params):
-    """Create a search controller bound to the running environment."""
-    return MCTSAgent(environment, **params)
+    """Run vanilla MCTS with a legal, uniform-random rollout controller."""
+    seed = params.get('seed', 0)
+    rollout_controller = BasicController(legal_only=True, seed=seed + 1)
+    return MCTSAgent(environment, rollout_controller=rollout_controller, **params)
 
 
 def create_controller(environment, controller_type, **params):

@@ -159,10 +159,10 @@ For the new DQN implementation, training, saved models, benchmarks and visual
 playback, see [the DQN guide](docs/dqn.md).
 
 An online Monte Carlo Tree Search controller is also available with the
-`controller=mcts` preset. It uses UCT selection and random rollouts from copied
-environment states; adjust its search budget with `controller.iterations` and
-`controller.max_depth`. For example, launch it in the visual ghosts environment
-with:
+`controller=mcts` preset. It uses UCT selection and a legal, uniform-random
+rollout controller on copied environment states; adjust its search budget with
+`controller.iterations` and `controller.max_depth`. For example, launch it in
+the visual ghosts environment with:
 
 ```bash
 python cli.py controller=mcts environment=ghosts eval=false
