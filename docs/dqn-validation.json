@@ -1,0 +1,195 @@
+{
+  "date": "2026-10-09",
+  "device": "cpu",
+  "python": "3.12.14",
+  "tests_passed": 35,
+  "native_pygame_window_verified": true,
+  "notes": [
+    "One training seed per configuration; this is a feasibility check.",
+    "The basic map and initial position are fixed; its 200 greedy runs repeat one route.",
+    "The final ghost run uses disjoint training, validation and test seed ranges.",
+    "Best checkpoint chosen by validation reward, not test score.",
+    "Gameplay GIFs illustrate individual episodes and are not benchmark evidence."
+  ],
+  "runs": [
+    {
+      "run": "basic-6-seed0",
+      "training": {
+        "config": {
+          "hidden_size": 128,
+          "learning_rate": 0.0005,
+          "gamma": 0.98,
+          "batch_size": 64,
+          "replay_capacity": 20000,
+          "learning_starts": 1000,
+          "train_every": 4,
+          "target_update_every": 250,
+          "epsilon_start": 1.0,
+          "epsilon_end": 0.05,
+          "epsilon_decay_steps": 20000,
+          "reward_scale": 0.1,
+          "grad_clip": 10.0,
+          "double_dqn": false,
+          "mask_actions": true,
+          "seed": 0,
+          "device": "cpu",
+          "num_threads": 1
+        },
+        "environment": {
+          "environment_name": "basic",
+          "grid_size": 6,
+          "max_steps": 80
+        },
+        "episodes": 600,
+        "eval_seed": 10000,
+        "eval_episodes": 3
+      },
+      "benchmark": {
+        "checkpoint": "outputs/dqn/basic-6-seed0/best.pt",
+        "environment": {
+          "environment_name": "basic",
+          "grid_size": 6,
+          "max_steps": 80
+        },
+        "evaluation_seed": 20000,
+        "training_seed": 0,
+        "checkpoint_episode": 100,
+        "policies": {
+          "random_all_actions": {
+            "Episodes": 200,
+            "Mean-score": 119.7,
+            "Std-score": 17.7052926249377,
+            "Mean-reward": -1126.44,
+            "Mean-steps": 74.795,
+            "Mean-food-fraction": 0.855,
+            "Win-rate": 0.26,
+            "Death-rate": 0.0,
+            "Min-steps-on-win": 29
+          },
+          "random_legal_actions": {
+            "Episodes": 200,
+            "Mean-score": 132.75,
+            "Std-score": 11.985648872483807,
+            "Mean-reward": 68.415,
+            "Mean-steps": 64.335,
+            "Mean-food-fraction": 0.9482142857142857,
+            "Win-rate": 0.62,
+            "Death-rate": 0.0,
+            "Min-steps-on-win": 24
+          },
+          "untrained_dqn": {
+            "Episodes": 200,
+            "Mean-score": 10,
+            "Std-score": 0.0,
+            "Mean-reward": -70.0,
+            "Mean-steps": 80,
+            "Mean-food-fraction": 0.0714285714285714,
+            "Win-rate": 0.0,
+            "Death-rate": 0.0
+          },
+          "trained_dqn": {
+            "Episodes": 200,
+            "Mean-score": 140,
+            "Std-score": 0.0,
+            "Mean-reward": 126.0,
+            "Mean-steps": 14,
+            "Mean-food-fraction": 1.0,
+            "Win-rate": 1.0,
+            "Death-rate": 0.0,
+            "Min-steps-on-win": 14
+          }
+        }
+      }
+    },
+    {
+      "run": "ghosts-10-verified-seed0",
+      "training": {
+        "config": {
+          "hidden_size": 128,
+          "learning_rate": 0.0005,
+          "gamma": 0.98,
+          "batch_size": 64,
+          "replay_capacity": 20000,
+          "learning_starts": 1000,
+          "train_every": 4,
+          "target_update_every": 250,
+          "epsilon_start": 1.0,
+          "epsilon_end": 0.05,
+          "epsilon_decay_steps": 100000,
+          "reward_scale": 0.1,
+          "grad_clip": 10.0,
+          "double_dqn": false,
+          "mask_actions": true,
+          "seed": 0,
+          "device": "cpu",
+          "num_threads": 1
+        },
+        "environment": {
+          "environment_name": "ghosts",
+          "grid_size": 10,
+          "max_steps": 200,
+          "num_ghosts": 2,
+          "stability_rate": 0.75
+        },
+        "episodes": 12000,
+        "eval_seed": 1000000,
+        "eval_episodes": 100
+      },
+      "benchmark": {
+        "checkpoint": "outputs/dqn/ghosts-10-verified-seed0/best.pt",
+        "environment": {
+          "environment_name": "ghosts",
+          "grid_size": 10,
+          "max_steps": 200,
+          "num_ghosts": 2,
+          "stability_rate": 0.75
+        },
+        "evaluation_seed": 30000,
+        "training_seed": 0,
+        "checkpoint_episode": 5000,
+        "policies": {
+          "random_all_actions": {
+            "Episodes": 300,
+            "Mean-score": 108.8,
+            "Std-score": 85.13157237702482,
+            "Mean-reward": -275.72333333333336,
+            "Mean-steps": 28.766666666666666,
+            "Mean-food-fraction": 0.18133333333333335,
+            "Win-rate": 0.0,
+            "Death-rate": 1.0
+          },
+          "random_legal_actions": {
+            "Episodes": 300,
+            "Mean-score": 111.83333333333333,
+            "Std-score": 81.39855427267219,
+            "Mean-reward": -17.39,
+            "Mean-steps": 24.79,
+            "Mean-food-fraction": 0.18638888888888888,
+            "Win-rate": 0.0,
+            "Death-rate": 1.0
+          },
+          "untrained_dqn": {
+            "Episodes": 300,
+            "Mean-score": 64.73333333333333,
+            "Std-score": 23.989871515704753,
+            "Mean-reward": -60.81333333333333,
+            "Mean-steps": 23.346666666666668,
+            "Mean-food-fraction": 0.10788888888888888,
+            "Win-rate": 0.0,
+            "Death-rate": 1.0
+          },
+          "trained_dqn": {
+            "Episodes": 300,
+            "Mean-score": 201.13333333333333,
+            "Std-score": 125.12755587674462,
+            "Mean-reward": 66.24666666666667,
+            "Mean-steps": 28.45,
+            "Mean-food-fraction": 0.3352222222222222,
+            "Win-rate": 0.0,
+            "Death-rate": 0.9966666666666667
+          }
+        }
+      }
+    }
+  ]
+}

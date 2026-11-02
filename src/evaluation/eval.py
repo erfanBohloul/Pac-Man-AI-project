@@ -1,51 +1,53 @@
+"""Evaluate policies without learning, using reproducible episode seeds."""
+import random
 import statistics
 from typing import Any
 
-from src.environment import PacmanEnvironment, BasicPacmanEnvironment
-from src.controller import Controller
+from src.environment import PacmanEnvironment
+from src.controller.controller import Controller
 
 
-def evaluate_algorithm(environment: PacmanEnvironment, controller: Controller, num_episodes=1000) -> dict[str, Any]:
-    """
-    Evaluates the specified controller in the given environment over a number of episodes.
-
-    Args:
-        environment (PacmanEnvironment): environment to run.
-        controller_name (str): Name of the controller to use.
-        num_episodes (int): Number of episodes to run for evaluation.
-        **kwargs: Keyword arguments to pass to the controller.
-
-    Returns:
-        float: The average score over all episodes.
-    """
-
-    scores = []
-    steps = []
-    rewards = []
-    min_num_steps_on_max = None
-    for _ in range(num_episodes):
-        observation = environment.reset()
-        
-        tmp_reward = 0.0
-        while not observation.done:
-            action = controller.get_action(observation)
-            observation = environment.step(action)
-            tmp_reward += observation.reward
-        
-        scores.append(observation.score)
-        steps.append(observation.step_count)
-        rewards.append(tmp_reward)
-        if isinstance(environment, BasicPacmanEnvironment) and observation.score == environment.max_score:
-            if min_num_steps_on_max is None or observation.step_count < min_num_steps_on_max:
-                min_num_steps_on_max = observation.step_count
-
+def evaluate_algorithm(environment: PacmanEnvironment, controller: Controller,
+                       num_episodes=1000, seed=None) -> dict[str, Any]:
+    if num_episodes <= 0:
+        raise ValueError("num_episodes must be positive")
+    scores, steps, rewards, fractions = [], [], [], []
+    wins = deaths = 0
+    winning_steps = []
+    rng_state = random.getstate()
+    try:
+        for episode in range(num_episodes):
+            if seed is not None:
+                random.seed(seed + episode)
+            observation = environment.reset()
+            initial_pellets = len(observation.map.pellets)
+            total_reward = 0.0
+            while not observation.done:
+                action = controller.get_action(observation)
+                observation = environment.step(action)
+                total_reward += observation.reward
+            dead = observation.map.pacman_position in observation.map.ghost_positions
+            won = not observation.map.pellets and not dead
+            wins += won
+            deaths += dead
+            if won:
+                winning_steps.append(observation.step_count)
+            scores.append(observation.score)
+            steps.append(observation.step_count)
+            rewards.append(total_reward)
+            fractions.append(1 - len(observation.map.pellets) / max(1, initial_pellets))
+    finally:
+        random.setstate(rng_state)
     stats = {
+        "Episodes": num_episodes,
         "Mean-score": statistics.mean(scores),
+        "Std-score": statistics.stdev(scores) if num_episodes > 1 else 0.0,
         "Mean-reward": statistics.mean(rewards),
-        "Mean-steps": statistics.mean(steps)
+        "Mean-steps": statistics.mean(steps),
+        "Mean-food-fraction": statistics.mean(fractions),
+        "Win-rate": wins / num_episodes,
+        "Death-rate": deaths / num_episodes,
     }
-
-    if min_num_steps_on_max is not None:
-        stats["Mean-number-of-steps-on-max"] = min_num_steps_on_max
-
+    if winning_steps:
+        stats["Min-steps-on-win"] = min(winning_steps)
     return stats

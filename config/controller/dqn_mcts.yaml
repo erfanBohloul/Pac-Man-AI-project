@@ -1,0 +1,7 @@
+defaults:
+  - mcts
+  - _self_
+
+type: dqn_mcts
+model_path: checkpoints/dqn-local/seed0.pt
+device: cpu

@@ -1,6 +1,8 @@
 import pygame
+from pathlib import Path
 from src.state import Map, ActionSpaceEnum
 from src.drawer import Drawer
+from src.drawer.audio import GameAudio, step_sound
 
 
 class PygameDrawer(Drawer):
@@ -11,7 +13,7 @@ class PygameDrawer(Drawer):
     grid lines, walls, pellets (as small circles), and the Pac-Man character.
     """
 
-    def __init__(self, grid_size=10, cell_size=40, framerate=3):
+    def __init__(self, grid_size=10, cell_size=40, framerate=3, sound=True, sound_volume=.25):
         """
         Initializes the Pygame drawer with display settings.
 
@@ -25,7 +27,7 @@ class PygameDrawer(Drawer):
         self.framerate = framerate
 
         self.clock = pygame.time.Clock()
-        pygame.init()
+        pygame.display.init()
 
         # Set up the display window based on grid and cell size
         self.screen = pygame.display.set_mode(
@@ -33,13 +35,32 @@ class PygameDrawer(Drawer):
         )
         pygame.display.set_caption("Pac-Man RL Environment")
         self._load_sprites()
+        self.audio = GameAudio(enabled=sound, volume=sound_volume)
+
+    def toggle_sound(self):
+        self.audio.toggle()
+
+    def play_step(self, previous_score, observation):
+        self.audio.play(step_sound(previous_score, observation))
+
+    def finish_episode(self):
+        """Let the final effect finish while keeping window controls responsive."""
+        while self.audio.busy():
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return False
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
+                    self.toggle_sound()
+            self.clock.tick(60)
+        return True
 
 
     def _load_sprites(self):
         """Load and scale all game sprites once during initialization"""
         # Load base images (replace paths with your actual sprite files)
+        sprites = Path(__file__).resolve().parents[2] / 'sprites'
         pacman_sprites = {
-            dir: pygame.image.load(f"sprites/pacman_{dir}.png").convert_alpha()
+            dir: pygame.image.load(str(sprites / f"pacman_{dir}.png")).convert_alpha()
             for dir in ["RIGHT", "LEFT", "UP", "DOWN", "DEAD"]
         }
         self.pacman_imgs = {
@@ -47,7 +68,7 @@ class PygameDrawer(Drawer):
             for dir, img in pacman_sprites.items()
         }
         ghost_sprites = {
-            color: pygame.image.load(f"sprites/ghost_{color}.png").convert_alpha()
+            color: pygame.image.load(str(sprites / f"ghost_{color}.png")).convert_alpha()
             for color in ["green", "red", "orange", "purple", "blue", "brown"]
         }
         self.ghost_imgs = {

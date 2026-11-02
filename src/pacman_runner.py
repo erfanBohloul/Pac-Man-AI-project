@@ -4,11 +4,11 @@ import json
 from uuid import uuid4
 from src.environment import BasicPacmanEnvironment, GhostsPacmanEnvironment
 from src.drawer import PygameDrawer
-from src.controller import BasicController, QLearnAgent, ValueIterationAgent, NeuralNetworkPolicy
+from src.controller import BasicController, QLearnAgent, ValueIterationAgent, DQNAgent, DQNConfig, MCTSAgent
 from src.evaluation import evaluate_algorithm
 
 
-def run_algorithm(environment, drawer, controller):
+def run_algorithm(environment, drawer, controller, display_episodes=0):
     """
     Execute the main game loop with the given environment, drawer, and controller.
 
@@ -19,25 +19,41 @@ def run_algorithm(environment, drawer, controller):
     """
     observation = environment.reset()
     running = True
+    completed_episodes = 0
 
     while running:
         # Process Pygame events to enable window closure.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_m:
+                drawer.toggle_sound()
+        if not running:
+            break
 
         # Get an action from the controller and perform a step in the environment.
         action = controller.get_action(observation)
+        previous_score = observation.score
         observation = environment.step(action)
         print(f"Step: {observation.step_count}, Action: {action}, Reward: {observation.reward}, Score: {observation.score}")
 
         # Render the current game state.
+        drawer.play_step(previous_score, observation)
+        pygame.display.set_caption(
+            f"Pac-Man | {type(controller).__name__} | Score {observation.score} | "
+            f"Step {observation.step_count}/{environment.max_steps} | Sound {drawer.audio.status} [M]"
+        )
         drawer.draw(observation.map, action)
 
         # Reset the environment if the episode has ended.
         if observation.done:
+            if not drawer.finish_episode():
+                break
             print("Episode finished. Resetting environment.")
-            environment.reset()
+            completed_episodes += 1
+            if display_episodes > 0 and completed_episodes >= display_episodes:
+                break
+            observation = environment.reset()
 
     # Clean up Pygame resources.
     drawer.close()
@@ -67,7 +83,7 @@ def create_environment(environment_name, **params):
     return environment
 
 
-def create_drawer(grid_size=10, cell_size=40, framerate=3):
+def create_drawer(grid_size=10, cell_size=40, framerate=3, sound=True, sound_volume=.25):
     """
     Create and return a Pygame drawer instance for rendering the game.
 
@@ -82,7 +98,9 @@ def create_drawer(grid_size=10, cell_size=40, framerate=3):
     return PygameDrawer(
         grid_size=grid_size,
         cell_size=cell_size,
-        framerate=framerate
+        framerate=framerate,
+        sound=sound,
+        sound_volume=sound_volume,
     )
 
 
@@ -151,12 +169,44 @@ def save_model(controller, params, method):
         method (str): The training method ('qlearn' or 'value_iteration').
     """
     checkpoint_folder = os.path.join('checkpoints', method, str(uuid4()))
-    os.mkdir(checkpoint_folder)
+    os.makedirs(checkpoint_folder, exist_ok=True)
     model_path = os.path.join(checkpoint_folder, 'checkpoint.pkl')
     print(f"Saving best model to {model_path}")
     controller.save_model(model_path)
     with open(os.path.join(checkpoint_folder, 'params'), 'w+') as file:
         json.dump(params, file)
+
+
+def create_dqn_controller(environment, mode, model_path, output_dir, train_episodes,
+                          eval_every, eval_episodes, validation_seed, **params):
+    if mode == 'load':
+        if not model_path or not os.path.isfile(model_path):
+            raise FileNotFoundError(f"DQN checkpoint not found: {model_path}")
+        return DQNAgent.from_checkpoint(model_path, environment, device=params.get('device', 'cpu'))
+    if mode != 'train':
+        raise ValueError("DQN mode must be 'train' or 'load'")
+    if model_path:
+        raise ValueError("Use mode=load for a saved policy; training starts a fresh model")
+    controller = DQNAgent(environment, DQNConfig(**params))
+    print(f"Training DQN on {controller.device}; writing results to {output_dir}", flush=True)
+    best = controller.train(environment, train_episodes, output_dir,
+                            eval_every, eval_episodes, validation_seed)
+    print(f"Loading best validation checkpoint: {best}", flush=True)
+    return DQNAgent.from_checkpoint(best, environment, device=controller.config.device)
+
+
+def create_mcts_controller(environment, **params):
+    """Run vanilla MCTS with a legal, uniform-random rollout controller."""
+    seed = params.get('seed', 0)
+    rollout_controller = BasicController(legal_only=True, seed=seed + 1)
+    return MCTSAgent(environment, rollout_controller=rollout_controller, **params)
+
+
+def create_dqn_mcts_controller(environment, model_path, device='cpu', **params):
+    """Run the shared MCTS engine with a trained DQN rollout controller."""
+    from src.controller import DQNAgent
+    policy = DQNAgent.from_checkpoint(model_path, environment, device=device)
+    return MCTSAgent(environment, rollout_controller=policy, **params)
 
 
 def create_controller(environment, controller_type, **params):
@@ -181,12 +231,19 @@ def create_controller(environment, controller_type, **params):
     elif controller_type == 'value_iteration':
         return create_value_iteration_controller(environment, **params)
     elif controller_type == "reinforce":
-        return NeuralNetworkPolicy()
+        from src.controller import NeuralNetworkPolicy
+        return NeuralNetworkPolicy(**params)
+    elif controller_type == 'dqn':
+        return create_dqn_controller(environment, **params)
+    elif controller_type == 'mcts':
+        return create_mcts_controller(environment, **params)
+    elif controller_type == 'dqn_mcts':
+        return create_dqn_mcts_controller(environment, **params)
     else:
         raise ValueError(f"Invalid controller type: {controller_type}")
 
 
-def run_game(environment_args, controller_args, drawer_args):
+def run_game(environment_args, controller_args, drawer_args, display_episodes=0):
     """
     Set up and run the Pac-Man game with specified components.
 
@@ -196,13 +253,15 @@ def run_game(environment_args, controller_args, drawer_args):
         drawer_args (dict): Arguments for creating the game renderer.
     """
     environment = create_environment(**environment_args)
-    drawer = create_drawer(**drawer_args)
     controller = create_controller(environment, **controller_args)
+    drawer = create_drawer(**drawer_args)
+    try:
+        run_algorithm(environment, drawer, controller, display_episodes)
+    finally:
+        drawer.close()
 
-    run_algorithm(environment, drawer, controller)
 
-
-def print_metrics(num_episodes, environment_args, controller_args):
+def print_metrics(num_episodes, environment_args, controller_args, seed=None):
     """
     Evaluate a controller on an environment and print performance metrics.
 
@@ -214,5 +273,5 @@ def print_metrics(num_episodes, environment_args, controller_args):
     environment = create_environment(**environment_args)
     controller = create_controller(environment, **controller_args)
     
-    metrics = evaluate_algorithm(environment, controller, num_episodes)
+    metrics = evaluate_algorithm(environment, controller, num_episodes, seed=seed)
     print(f"Environment: {environment_args['environment_name']}", f"Controller: {controller_args['controller_type']}", f"Metrics: {metrics}")

@@ -1,0 +1,46 @@
+{
+  "source_run": "outputs/dqn/wall-comparison/local_walls-seed0",
+  "selection": "Training seed 0 chosen in advance for demo; best checkpoint selected by validation mean reward, not test results.",
+  "sha256": "5a34805fc5cc17236a57cda72f3480c09f54670dfbd86bda6759cd8de88627f2",
+  "bytes": 414463,
+  "checkpoint_episode": 1000,
+  "config": {
+    "hidden_size": 128,
+    "learning_rate": 0.0005,
+    "gamma": 0.98,
+    "batch_size": 64,
+    "replay_capacity": 20000,
+    "learning_starts": 1000,
+    "train_every": 4,
+    "target_update_every": 250,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.05,
+    "epsilon_decay_steps": 80000,
+    "reward_scale": 0.1,
+    "grad_clip": 10.0,
+    "double_dqn": false,
+    "mask_actions": true,
+    "navigation_features": true,
+    "wall_features": false,
+    "local_wall_features": true,
+    "seed": 0,
+    "device": "cpu",
+    "num_threads": 1
+  },
+  "environment": {
+    "environment_name": "ghosts",
+    "grid_size": 10,
+    "max_steps": 200,
+    "num_ghosts": 2,
+    "stability_rate": 0.75
+  },
+  "timing": {
+    "total_seconds": 285.4089954170013,
+    "validation_seconds": 22.945869000997845,
+    "environment_steps": 334500,
+    "episodes": 6000,
+    "device": "cpu",
+    "num_threads": 1,
+    "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+  }
+}

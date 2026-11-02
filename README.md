@@ -29,6 +29,13 @@ s_{ij} = \begin{cases}
 \end{cases}
 $$
 
+`Map.to_numpy()` returns this grid flattened, with each position `(x, y)`
+written to row `y`, column `x`. This grid is an observation encoding, not the
+complete simulator state: ghost directions are stored separately in
+`map.ghost_position_to_prev_action`, and pellets under ghosts remain in
+`map.pellets`. The DQN encoder includes those features and the remaining episode
+time in separate inputs; see [the DQN guide](docs/dqn.md).
+
 ### Action Space $\mathcal{A}$
 
 The action space is defined as:
@@ -49,13 +56,17 @@ The reward function $$\mathcal{R}: \mathcal{S} \times \mathcal{A} \times \mathca
 
 $$
 \mathcal{R}(s, a, s') = \begin{cases}
-10 & \text{if Pac-Man eats a pellet} \\
--1 & \text{for each move} \\
--50 & \text{if Pac-Man crashes into a wall} \\
+0 & \text{if the episode was already finished} \\
 -100 & \text{if Pac-Man collides with a ghost} \\
-0 & \text{otherwise}
+-50 & \text{if Pac-Man hits a wall without dying} \\
+9 & \text{if Pac-Man eats a pellet without dying} \\
+-1 & \text{otherwise}
 \end{cases}
 $$
+
+Eating a pellet increases the score by 10; its reward includes the -1 step
+cost. Collision is checked both before and after ghost movement and overrides
+the other rewards. Ghosts do not move if Pac-Man has already stepped onto one.
 
 ### Transition Model $\mathcal{P}$
 
@@ -71,30 +82,112 @@ $$
 $$
 
 For ghosts:
-Let $d$ be the current direction of a ghost, and $D$ be the set of possible directions excluding walls.
+Let $d$ be the previous direction, $D$ the available directions excluding walls
+and other ghosts, and $p$ the configured `stability_rate` (default 0.75).
+For nonempty $D$:
 
 $$
 \mathcal{P}(d'|d) = \begin{cases}
-0.8125 & \text{if } d' = d \text{ and } d \in D \\
-\frac{0.1875}{|D|-1} & \text{if } d' \neq d \text{ and } d' \in D \\
+p + \frac{1-p}{|D|} & \text{if } d' = d \text{ and } d \in D \\
+\frac{1-p}{|D|} & \text{if } d' \neq d \text{ and } d, d' \in D \\
+\frac{1}{|D|} & \text{if } d \notin D \text{ and } d' \in D \\
 0 & \text{if } d' \notin D
 \end{cases}
 $$
 
+An uninitialized direction is treated as $d \notin D$. A ghost with no available
+move stays in place. Ghosts move sequentially in color-name order, including in
+reconstructed simulations.
+
 ### Finish Conditions
 
 The game terminates when:
-1. Pac-Man collects all pellets: $$\sum_{i,j} \mathbb{1}_{s_{ij}=1} = 0$$
-2. Pac-Man collides with a ghost: $$\exists (i,j) : s_{ij} = 2 \wedge (s_{i+1,j} = -2 \vee s_{i-1,j} = -2 \vee s_{i,j+1} = -2 \vee s_{i,j-1} = -2)$$
+1. Pac-Man collects all pellets (`map.pellets` is empty).
+2. Pac-Man occupies the same cell as a ghost, before or after ghost movement.
+3. The episode reaches `max_steps` (default 200).
+
+## Simulation and state snapshots
+
+Use `env.clone()` on an initialized `GhostsPacmanEnvironment` to copy the map,
+ghost directions, score, elapsed steps, episode limit, terminal flag and ghost
+stability rate. The copied game can be stepped without changing the source map
+or ghosts. `Map.clone()` also preserves the `MapFullHash` subclass.
+
+```python
+simulation = env.clone()
+result = simulation.step(action)
+```
+
+To build a simulation from a saved map, supply the episode settings explicitly:
+
+```python
+simulation = GhostsPacmanEnvironment.from_map(
+    saved_map,
+    past_steps=100,
+    max_steps=200,  # Total episode limit: 100 steps remain.
+    score=score,
+    stability_rate=0.75,
+)
+```
+
+Terminal states can also be reconstructed; stepping them returns `done=True`
+and zero reward without changing the state. Maps created without direction
+metadata start ghosts with no previous direction.
+
+Observations currently refer to the live map. For a replay buffer, capture
+`observation.map.clone()` or encode the state **before** the next environment
+step. Ghost sampling still uses Python's global `random` generator; cloning
+does not create a separate random stream.
+
+Full-state Q-table keys now include ghost identities and directions. Retrain
+existing full-state checkpoints; their integer keys use the old encoding.
+Historical scores in the controller documentation predate these environment
+fixes and should be remeasured for algorithm comparisons.
+
+Run the environment regression tests with Python and NumPy (no GUI or training
+libraries required):
+
+```bash
+python -m unittest discover -s test -p '*_test.py' -v
+```
 
 ---
 
 ## Build and Run
 
+For the new DQN implementation, training, saved models, benchmarks and visual
+playback, see [the DQN guide](docs/dqn.md).
+
+An online Monte Carlo Tree Search controller is also available with the
+`controller=mcts` preset. It uses UCT selection and a legal, uniform-random
+rollout controller on copied environment states; adjust its search budget with
+`controller.iterations` and `controller.max_depth`. For example, launch it in
+the visual ghosts environment with:
+
+```bash
+python cli.py controller=mcts environment=ghosts eval=false
+```
+
+The `controller=dqn_mcts` preset runs the same MCTS engine and search settings,
+but injects a trained DQN as the rollout controller. This keeps tree selection,
+expansion, reward backup, and search budget shared with vanilla MCTS; only the
+rollout policy changes. The default preset loads the included local-wall DQN
+checkpoint, which expects the default 10x10 ghosts environment. Override
+`controller.model_path` to use another compatible DQN checkpoint. For example:
+
+```bash
+python cli.py controller=dqn_mcts environment=ghosts eval=false
+```
+
+The `controller=dqn_local` preset uses four adjacent-wall indicators in place
+of the full wall plane (`266 -> 128 -> 128 -> 4` on the default 10 x 10 maze).
+See [the local-wall experiment](docs/dqn-local-walls.md) for training, visual
+playback and the matched-seed comparison.
+
 1. Clone this repository:
    ```bash
-   git clone https://github.com/Alexander-Ploskin/Pac-Man.git
-   cd Pac-Man
+   git clone --branch DQN https://github.com/erfanBohloul/Pac-Man-AI-project.git
+   cd Pac-Man-AI-project
    ```
 2. Install the dependencies:
    ```bash
@@ -133,10 +226,10 @@ Below is a demonstration of the project in action:
 ### Cross Entropy
 ![Pac-Man Gameplay Cross Entropy](https://raw.githubusercontent.com/Alexander-Ploskin/Pac-Man/master/assets/cross_entropy.gif)
 
-### DQN (Basic Environment)
+### REINFORCE (Basic Environment, legacy demo)
 ![Pac-Man Gameplay REINFORCE (Basic Environment)](https://raw.githubusercontent.com/Alexander-Ploskin/Pac-Man/master/assets/reinforce.gif)
 
-### DQN (Ghosts Environment)
+### REINFORCE (Ghosts Environment, legacy demo)
 ![Pac-Man Gameplay REINFORCE (Ghosts Environment)](https://raw.githubusercontent.com/Alexander-Ploskin/Pac-Man/master/assets/reinforce_ghosts.gif)
 
 

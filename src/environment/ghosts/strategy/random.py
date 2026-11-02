@@ -43,7 +43,7 @@ class RandomGhostStrategy(GhostStrategy):
         if not possible_actions:
             raise ValueError('there is no possible actions')
         
-        if prev_action and prev_action in possible_actions and random.random() < self.stability_rate:
+        if prev_action is not None and prev_action in possible_actions and random.random() < self.stability_rate:
             return prev_action
         
         return random.choice(possible_actions)

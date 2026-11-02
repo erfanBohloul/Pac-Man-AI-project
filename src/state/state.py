@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Set, List, Dict
 from copy import deepcopy
@@ -80,6 +80,8 @@ class Map:
     ghost_positions: Set[Position]
     ghost_position_to_color: Dict[Position, GhostColorEnum]
     pacman_position: Position
+    # Ghost movement depends on its previous direction, not only its position.
+    ghost_position_to_prev_action: Dict[Position, ActionSpaceEnum | None] = field(default_factory=dict)
 
     directions = {
         ActionSpaceEnum.UP: (0, -1),
@@ -153,21 +155,15 @@ class Map:
             state[pellet.y, pellet.x] = 1
         
         for ghost in self.ghost_positions:
-            state[ghost.x, ghost.y] = -2
+            state[ghost.y, ghost.x] = -2
 
         state[self.pacman_position.y, self.pacman_position.x] = 2
 
         return state.reshape(-1)
 
     def clone(self) -> "Map":
-        return Map(
-            walls=deepcopy(self.walls),             # sets of frozen positions are safe to share
-            pellets=deepcopy(self.pellets),    # mutable, so copy
-            pacman_position=deepcopy(self.pacman_position),
-            ghost_positions=deepcopy(self.ghost_positions),
-            ghost_position_to_color=deepcopy(self.ghost_position_to_color),
-            size=self.size,
-        )
+        """Copy all map data, including ghost directions and the map subclass."""
+        return deepcopy(self)
 
     def is_terminal(self) -> bool:
         """
@@ -178,12 +174,28 @@ class Map:
         Returns:
             bool: True if the state is terminal, False otherwise.
         """
-        return not self.pellets or len(self.pellets) == 0 or self.pacman_position in self.ghost_positions
+        return not self.pellets or self.pacman_position in self.ghost_positions
 
 
 class MapFullHash(Map):
     def __hash__(self):
-        return hash((frozenset(self.pellets), self.pacman_position, frozenset(self.ghost_positions)))
+        # QTable persists integer hashes: use numeric color/direction codes so
+        # Python's randomized string/None hashes cannot change keys on restart.
+        color_codes = {color: index for index, color in enumerate(GhostColorEnum)}
+        ghosts = frozenset(
+            (
+                position,
+                color_codes.get(self.ghost_position_to_color.get(position), -1),
+                -1 if self.ghost_position_to_prev_action.get(position) is None
+                else int(self.ghost_position_to_prev_action[position]),
+            )
+            for position in self.ghost_positions
+        )
+        return hash((
+            frozenset(self.pellets),
+            self.pacman_position,
+            ghosts,
+        ))
 
 
 @dataclass

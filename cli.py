@@ -1,5 +1,7 @@
 from src.pacman_runner import run_game, print_metrics
 import hydra
+import random
+from omegaconf import OmegaConf
 
 
 @hydra.main(version_base=None, config_path="config", config_name="config")
@@ -7,6 +9,7 @@ def main(cfg):
     """
     Unified entry point for running the game with Hydra configuration
     """
+    random.seed(cfg.seed)
     controller = cfg.controller.type
     
     controller_args = {
@@ -15,11 +18,14 @@ def main(cfg):
     environment_args = {
         'environment_name': cfg.environment.type,
         'grid_size': cfg.grid_size,
+        'max_steps': cfg.max_steps,
     }
     drawer_args = {
         'grid_size': cfg.grid_size,
         'cell_size': cfg.cell_size,
         'framerate': cfg.framerate,
+        'sound': cfg.sound,
+        'sound_volume': cfg.sound_volume,
     }
     
     if controller == 'random':
@@ -41,6 +47,21 @@ def main(cfg):
             'theta': cfg.controller.theta,
             'max_iterations': cfg.controller.max_iterations,
             'model_path': cfg.controller.model_path,
+        })
+    elif controller == 'dqn':
+        controller_args.update({
+            key: value for key, value in OmegaConf.to_container(cfg.controller, resolve=True).items()
+            if key != 'type'
+        })
+    elif controller == 'mcts':
+        controller_args.update({
+            key: value for key, value in OmegaConf.to_container(cfg.controller, resolve=True).items()
+            if key != 'type'
+        })
+    elif controller == 'dqn_mcts':
+        controller_args.update({
+            key: value for key, value in OmegaConf.to_container(cfg.controller, resolve=True).items()
+            if key != 'type'
         })
     elif controller == "reinforce":
         controller_args.update({
@@ -68,12 +89,14 @@ def main(cfg):
             num_episodes=cfg.num_episodes,            
             environment_args=environment_args,
             controller_args=controller_args,
+            seed=cfg.eval_seed,
         )
     else:
         run_game(
             environment_args=environment_args,
             controller_args=controller_args,
             drawer_args=drawer_args,
+            display_episodes=cfg.display_episodes,
         )
 
 if __name__ == '__main__':

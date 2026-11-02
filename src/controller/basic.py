@@ -12,12 +12,14 @@ class BasicController(Controller):
     the provided observation.
     """
 
-    def __init__(self):
+    def __init__(self, legal_only=False, seed=None):
         """
         Initializes the BasicController with all possible actions.
 
         The action space includes four discrete actions: UP, RIGHT, DOWN, and LEFT.
         """
+        self.legal_only = legal_only
+        self.rng = random.Random(seed) if seed is not None else random
         self.action_space = [
             ActionSpaceEnum.UP,
             ActionSpaceEnum.RIGHT,
@@ -37,4 +39,5 @@ class BasicController(Controller):
         Returns:
             ActionSpaceEnum: A randomly chosen action from the action space.
         """
-        return random.choice(self.action_space)
+        actions = observation.map.get_legal_actions() if self.legal_only else self.action_space
+        return self.rng.choice(actions or self.action_space)
