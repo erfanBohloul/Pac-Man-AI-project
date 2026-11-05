@@ -3,7 +3,6 @@
 from copy import deepcopy
 import math
 import random
-
 from src.controller.controller import Controller
 from src.state import ActionSpaceEnum, Observation
 
@@ -52,6 +51,9 @@ class MCTSAgent(Controller):
         self.max_depth = int(max_depth)
         self.gamma = float(gamma)
         self.rng = random.Random(seed)
+
+        # debug
+        self.deepcopy_avg_time = (0, 0)
 
     @staticmethod
     def _state_key(environment):

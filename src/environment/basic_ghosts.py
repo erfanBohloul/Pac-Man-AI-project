@@ -65,10 +65,16 @@ class GhostsPacmanEnvironment(PacmanEnvironment):
             walls.add(Position(i, 0))
             walls.add(Position(i, self.grid_size - 1))
         
-        # Add internal walls (an example pattern)
-        if inner_walls:
-            for x in range(2, self.grid_size - 2, 2):
-                walls.add(Position(x, self.grid_size // 2))
+        # Match the basic environment's fixed room-and-corridor maze.
+        if inner_walls and self.grid_size >= 11:
+            for x in (self.grid_size // 3, 2 * self.grid_size // 3):
+                for y in range(2, self.grid_size - 2):
+                    if y not in (3, self.grid_size // 2, self.grid_size - 4):
+                        walls.add(Position(x, y))
+            for y in (self.grid_size // 3, 2 * self.grid_size // 3):
+                for x in range(2, self.grid_size - 2):
+                    if x not in (3, self.grid_size // 2, self.grid_size - 4):
+                        walls.add(Position(x, y))
         
         # Populate the grid with pellets where there are no walls
         walls.discard(Position(self.grid_size // 2, self.grid_size // 2))

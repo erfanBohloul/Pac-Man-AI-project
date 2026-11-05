@@ -329,9 +329,11 @@ class DQNAgent(Controller):
         output.mkdir(parents=True, exist_ok=True)
         if (output / "training.jsonl").exists():
             raise FileExistsError(f"Use a fresh output directory to preserve previous runs: {output}")
+        
         validation_env = deepcopy(env)
         run = {"config": asdict(self.config), "environment": self.environment_spec,
                "episodes": episodes, "eval_seed": eval_seed, "eval_episodes": eval_episodes}
+        
         (output / "run.json").write_text(json.dumps(run, indent=2) + "\n")
         best_reward = -float("inf")
         started = perf_counter()
