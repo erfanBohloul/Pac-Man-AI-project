@@ -8,7 +8,7 @@ import statistics
 import torch
 
 from src.controller import DQNAgent
-from src.pacman_runner import create_environment
+from src.environment import GhostsPacmanEnvironment
 
 
 def inspect(agent, env, episodes, seed):
@@ -66,7 +66,10 @@ def main():
     if args.episodes <= 0:
         parser.error('--episodes must be positive')
     payload = torch.load(args.checkpoint, map_location='cpu', weights_only=True)
-    env = create_environment(**payload['environment'])
+    spec = dict(payload['environment'])
+    if spec.pop('environment_name') != 'ghosts':
+        parser.error('This script supports the maintained ghosts environment only')
+    env = GhostsPacmanEnvironment(**spec)
     agent = DQNAgent.from_checkpoint(args.checkpoint, env)
     result = inspect(agent, env, args.episodes, args.seed)
     result['checkpoint'] = args.checkpoint
