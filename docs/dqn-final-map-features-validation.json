@@ -1,0 +1,1264 @@
+{
+  "settings": {
+    "train_episodes": 1000,
+    "test_episodes": 300,
+    "seeds": [
+      0,
+      10000,
+      20000
+    ],
+    "workers": 3,
+    "output_dir": "outputs/dqn/final-map-features"
+  },
+  "git_head": "2eb6fff77eade6824ce41df07216517f48ccd09d",
+  "torch_version": "2.14.1",
+  "scope": "DQN-only feature comparison; no MCTS simulation used.",
+  "results": [
+    {
+      "variant": "walls",
+      "training_seed": 0,
+      "environment": {
+        "grid_size": 15,
+        "num_ghosts": 4,
+        "max_steps": 500,
+        "stability_rate": 0.75,
+        "full_hash": true
+      },
+      "map_identity": {
+        "wall_sha256": "947f56f9a1f9c5b870f8db568cf1e334e3e5d8dfb2f0817389ce2f117ec035bd",
+        "initial_food": 140,
+        "all_food_reachable": true
+      },
+      "config": {
+        "hidden_size": 128,
+        "learning_rate": 0.0005,
+        "gamma": 0.98,
+        "batch_size": 64,
+        "replay_capacity": 20000,
+        "learning_starts": 1000,
+        "train_every": 4,
+        "target_update_every": 250,
+        "epsilon_start": 1.0,
+        "epsilon_end": 0.05,
+        "epsilon_decay_steps": 50000,
+        "reward_scale": 0.1,
+        "grad_clip": 10.0,
+        "double_dqn": false,
+        "mask_actions": true,
+        "navigation_features": true,
+        "wall_features": true,
+        "local_wall_features": false,
+        "seed": 0,
+        "device": "cpu",
+        "num_threads": 1
+      },
+      "input_size": 737,
+      "parameters": 111492,
+      "checkpoint": "outputs/dqn/final-map-features/walls-seed0/best.pt",
+      "selected_episode": 1000,
+      "selected_validation": {
+        "Episodes": 10,
+        "Mean-score": 1288,
+        "Std-score": 236.9153622897614,
+        "Mean-reward": 1001.1,
+        "Mean-steps": 244.3,
+        "Mean-food-fraction": 0.92,
+        "Win-rate": 0.5,
+        "Death-rate": 0.4,
+        "Min-steps-on-win": 223
+      },
+      "final_environment_steps": 63452,
+      "timing": {
+        "total_seconds": 99.87563270800092,
+        "validation_seconds": 11.862077919002331,
+        "environment_steps": 63452,
+        "episodes": 1000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "training_with_setup_seconds": 100.45944500000041,
+      "test_plus_loop_inspection_seconds": 59.91003762499895,
+      "metrics": {
+        "Episodes": 300,
+        "Mean-score": 1021.9333333333333,
+        "Std-score": 434.41914729980675,
+        "Mean-reward": 764.28,
+        "Mean-steps": 196.76,
+        "Mean-food-fraction": 0.7299523809523809,
+        "Win-rate": 0.4066666666666667,
+        "Death-rate": 0.5733333333333334,
+        "Min-steps-on-win": 198
+      },
+      "loops": {
+        "episodes": 300,
+        "seed": 2000000,
+        "mean_score": 1021.9333333333333,
+        "mean_reward": 764.28,
+        "mean_steps": 196.76,
+        "mean_loop_steps": 13.31,
+        "loop_step_fraction": 0.06764586298028054,
+        "episodes_with_loops": 147,
+        "mean_longest_foodless_run": 38.32,
+        "win_rate": 0.4066666666666667
+      }
+    },
+    {
+      "variant": "no_walls",
+      "training_seed": 0,
+      "environment": {
+        "grid_size": 15,
+        "num_ghosts": 4,
+        "max_steps": 500,
+        "stability_rate": 0.75,
+        "full_hash": true
+      },
+      "map_identity": {
+        "wall_sha256": "947f56f9a1f9c5b870f8db568cf1e334e3e5d8dfb2f0817389ce2f117ec035bd",
+        "initial_food": 140,
+        "all_food_reachable": true
+      },
+      "config": {
+        "hidden_size": 128,
+        "learning_rate": 0.0005,
+        "gamma": 0.98,
+        "batch_size": 64,
+        "replay_capacity": 20000,
+        "learning_starts": 1000,
+        "train_every": 4,
+        "target_update_every": 250,
+        "epsilon_start": 1.0,
+        "epsilon_end": 0.05,
+        "epsilon_decay_steps": 50000,
+        "reward_scale": 0.1,
+        "grad_clip": 10.0,
+        "double_dqn": false,
+        "mask_actions": true,
+        "navigation_features": true,
+        "wall_features": false,
+        "local_wall_features": false,
+        "seed": 0,
+        "device": "cpu",
+        "num_threads": 1
+      },
+      "input_size": 512,
+      "parameters": 82692,
+      "checkpoint": "outputs/dqn/final-map-features/no_walls-seed0/best.pt",
+      "selected_episode": 800,
+      "selected_validation": {
+        "Episodes": 10,
+        "Mean-score": 1044,
+        "Std-score": 469.4488494204904,
+        "Mean-reward": 744.8,
+        "Mean-steps": 235.8,
+        "Mean-food-fraction": 0.7457142857142858,
+        "Win-rate": 0.3,
+        "Death-rate": 0.6,
+        "Min-steps-on-win": 298
+      },
+      "final_environment_steps": 74661,
+      "timing": {
+        "total_seconds": 116.61653325000043,
+        "validation_seconds": 12.522194833003596,
+        "environment_steps": 74661,
+        "episodes": 1000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "training_with_setup_seconds": 117.19726045800053,
+      "test_plus_loop_inspection_seconds": 78.8125023749999,
+      "metrics": {
+        "Episodes": 300,
+        "Mean-score": 1024.2333333333333,
+        "Std-score": 400.50521467119285,
+        "Mean-reward": 698.7066666666667,
+        "Mean-steps": 262.8233333333333,
+        "Mean-food-fraction": 0.7315952380952381,
+        "Win-rate": 0.17,
+        "Death-rate": 0.5966666666666667,
+        "Min-steps-on-win": 208
+      },
+      "loops": {
+        "episodes": 300,
+        "seed": 2000000,
+        "mean_score": 1024.2333333333333,
+        "mean_reward": 698.7066666666667,
+        "mean_steps": 262.8233333333333,
+        "mean_loop_steps": 28.993333333333332,
+        "loop_step_fraction": 0.11031491369360914,
+        "episodes_with_loops": 179,
+        "mean_longest_foodless_run": 87.61,
+        "win_rate": 0.17
+      }
+    },
+    {
+      "variant": "local_walls",
+      "training_seed": 0,
+      "environment": {
+        "grid_size": 15,
+        "num_ghosts": 4,
+        "max_steps": 500,
+        "stability_rate": 0.75,
+        "full_hash": true
+      },
+      "map_identity": {
+        "wall_sha256": "947f56f9a1f9c5b870f8db568cf1e334e3e5d8dfb2f0817389ce2f117ec035bd",
+        "initial_food": 140,
+        "all_food_reachable": true
+      },
+      "config": {
+        "hidden_size": 128,
+        "learning_rate": 0.0005,
+        "gamma": 0.98,
+        "batch_size": 64,
+        "replay_capacity": 20000,
+        "learning_starts": 1000,
+        "train_every": 4,
+        "target_update_every": 250,
+        "epsilon_start": 1.0,
+        "epsilon_end": 0.05,
+        "epsilon_decay_steps": 50000,
+        "reward_scale": 0.1,
+        "grad_clip": 10.0,
+        "double_dqn": false,
+        "mask_actions": true,
+        "navigation_features": true,
+        "wall_features": false,
+        "local_wall_features": true,
+        "seed": 0,
+        "device": "cpu",
+        "num_threads": 1
+      },
+      "input_size": 516,
+      "parameters": 83204,
+      "checkpoint": "outputs/dqn/final-map-features/local_walls-seed0/best.pt",
+      "selected_episode": 750,
+      "selected_validation": {
+        "Episodes": 10,
+        "Mean-score": 1057,
+        "Std-score": 525.3369289217053,
+        "Mean-reward": 771.9,
+        "Mean-steps": 242.5,
+        "Mean-food-fraction": 0.755,
+        "Win-rate": 0.4,
+        "Death-rate": 0.4,
+        "Min-steps-on-win": 215
+      },
+      "final_environment_steps": 75898,
+      "timing": {
+        "total_seconds": 120.14815316699969,
+        "validation_seconds": 13.837151873005496,
+        "environment_steps": 75898,
+        "episodes": 1000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "training_with_setup_seconds": 120.7283589159997,
+      "test_plus_loop_inspection_seconds": 78.07197087499844,
+      "metrics": {
+        "Episodes": 300,
+        "Mean-score": 1022.6333333333333,
+        "Std-score": 418.90612316161787,
+        "Mean-reward": 702.55,
+        "Mean-steps": 258.00666666666666,
+        "Mean-food-fraction": 0.730452380952381,
+        "Win-rate": 0.2,
+        "Death-rate": 0.59,
+        "Min-steps-on-win": 232
+      },
+      "loops": {
+        "episodes": 300,
+        "seed": 2000000,
+        "mean_score": 1022.6333333333333,
+        "mean_reward": 702.55,
+        "mean_steps": 258.00666666666666,
+        "mean_loop_steps": 33.94,
+        "loop_step_fraction": 0.13154698844991086,
+        "episodes_with_loops": 177,
+        "mean_longest_foodless_run": 82.59666666666666,
+        "win_rate": 0.2
+      }
+    },
+    {
+      "variant": "walls",
+      "training_seed": 10000,
+      "environment": {
+        "grid_size": 15,
+        "num_ghosts": 4,
+        "max_steps": 500,
+        "stability_rate": 0.75,
+        "full_hash": true
+      },
+      "map_identity": {
+        "wall_sha256": "947f56f9a1f9c5b870f8db568cf1e334e3e5d8dfb2f0817389ce2f117ec035bd",
+        "initial_food": 140,
+        "all_food_reachable": true
+      },
+      "config": {
+        "hidden_size": 128,
+        "learning_rate": 0.0005,
+        "gamma": 0.98,
+        "batch_size": 64,
+        "replay_capacity": 20000,
+        "learning_starts": 1000,
+        "train_every": 4,
+        "target_update_every": 250,
+        "epsilon_start": 1.0,
+        "epsilon_end": 0.05,
+        "epsilon_decay_steps": 50000,
+        "reward_scale": 0.1,
+        "grad_clip": 10.0,
+        "double_dqn": false,
+        "mask_actions": true,
+        "navigation_features": true,
+        "wall_features": true,
+        "local_wall_features": false,
+        "seed": 10000,
+        "device": "cpu",
+        "num_threads": 1
+      },
+      "input_size": 737,
+      "parameters": 111492,
+      "checkpoint": "outputs/dqn/final-map-features/walls-seed10000/best.pt",
+      "selected_episode": 950,
+      "selected_validation": {
+        "Episodes": 10,
+        "Mean-score": 1135,
+        "Std-score": 340.20418705372936,
+        "Mean-reward": 807.7,
+        "Mean-steps": 284.7,
+        "Mean-food-fraction": 0.8107142857142857,
+        "Win-rate": 0.4,
+        "Death-rate": 0.4,
+        "Min-steps-on-win": 262
+      },
+      "final_environment_steps": 57866,
+      "timing": {
+        "total_seconds": 91.54466370799855,
+        "validation_seconds": 11.82221637299881,
+        "environment_steps": 57866,
+        "episodes": 1000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "training_with_setup_seconds": 91.54671116700047,
+      "test_plus_loop_inspection_seconds": 73.095885540999,
+      "metrics": {
+        "Episodes": 300,
+        "Mean-score": 1008.3,
+        "Std-score": 439.158639943232,
+        "Mean-reward": 706.71,
+        "Mean-steps": 241.02333333333334,
+        "Mean-food-fraction": 0.7202142857142857,
+        "Win-rate": 0.23333333333333334,
+        "Death-rate": 0.5666666666666667,
+        "Min-steps-on-win": 194
+      },
+      "loops": {
+        "episodes": 300,
+        "seed": 2000000,
+        "mean_score": 1008.3,
+        "mean_reward": 706.71,
+        "mean_steps": 241.02333333333334,
+        "mean_loop_steps": 26.356666666666666,
+        "loop_step_fraction": 0.10935317465805523,
+        "episodes_with_loops": 167,
+        "mean_longest_foodless_run": 76.39666666666666,
+        "win_rate": 0.23333333333333334
+      }
+    },
+    {
+      "variant": "no_walls",
+      "training_seed": 10000,
+      "environment": {
+        "grid_size": 15,
+        "num_ghosts": 4,
+        "max_steps": 500,
+        "stability_rate": 0.75,
+        "full_hash": true
+      },
+      "map_identity": {
+        "wall_sha256": "947f56f9a1f9c5b870f8db568cf1e334e3e5d8dfb2f0817389ce2f117ec035bd",
+        "initial_food": 140,
+        "all_food_reachable": true
+      },
+      "config": {
+        "hidden_size": 128,
+        "learning_rate": 0.0005,
+        "gamma": 0.98,
+        "batch_size": 64,
+        "replay_capacity": 20000,
+        "learning_starts": 1000,
+        "train_every": 4,
+        "target_update_every": 250,
+        "epsilon_start": 1.0,
+        "epsilon_end": 0.05,
+        "epsilon_decay_steps": 50000,
+        "reward_scale": 0.1,
+        "grad_clip": 10.0,
+        "double_dqn": false,
+        "mask_actions": true,
+        "navigation_features": true,
+        "wall_features": false,
+        "local_wall_features": false,
+        "seed": 10000,
+        "device": "cpu",
+        "num_threads": 1
+      },
+      "input_size": 512,
+      "parameters": 82692,
+      "checkpoint": "outputs/dqn/final-map-features/no_walls-seed10000/best.pt",
+      "selected_episode": 800,
+      "selected_validation": {
+        "Episodes": 10,
+        "Mean-score": 1278,
+        "Std-score": 287.12366673612956,
+        "Mean-reward": 920.5,
+        "Mean-steps": 335.7,
+        "Mean-food-fraction": 0.9128571428571428,
+        "Win-rate": 0.5,
+        "Death-rate": 0.2,
+        "Min-steps-on-win": 285
+      },
+      "final_environment_steps": 70590,
+      "timing": {
+        "total_seconds": 113.48198666699864,
+        "validation_seconds": 15.365909876996739,
+        "environment_steps": 70590,
+        "episodes": 1000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "training_with_setup_seconds": 113.48385733299983,
+      "test_plus_loop_inspection_seconds": 86.69346454100014,
+      "metrics": {
+        "Episodes": 300,
+        "Mean-score": 1113.4333333333334,
+        "Std-score": 381.74289473565767,
+        "Mean-reward": 772.3966666666666,
+        "Mean-steps": 288.80333333333334,
+        "Mean-food-fraction": 0.7953095238095238,
+        "Win-rate": 0.25666666666666665,
+        "Death-rate": 0.5,
+        "Min-steps-on-win": 216
+      },
+      "loops": {
+        "episodes": 300,
+        "seed": 2000000,
+        "mean_score": 1113.4333333333334,
+        "mean_reward": 772.3966666666666,
+        "mean_steps": 288.80333333333334,
+        "mean_loop_steps": 33.93333333333333,
+        "loop_step_fraction": 0.11749633545319191,
+        "episodes_with_loops": 205,
+        "mean_longest_foodless_run": 90.03666666666666,
+        "win_rate": 0.25666666666666665
+      }
+    },
+    {
+      "variant": "local_walls",
+      "training_seed": 10000,
+      "environment": {
+        "grid_size": 15,
+        "num_ghosts": 4,
+        "max_steps": 500,
+        "stability_rate": 0.75,
+        "full_hash": true
+      },
+      "map_identity": {
+        "wall_sha256": "947f56f9a1f9c5b870f8db568cf1e334e3e5d8dfb2f0817389ce2f117ec035bd",
+        "initial_food": 140,
+        "all_food_reachable": true
+      },
+      "config": {
+        "hidden_size": 128,
+        "learning_rate": 0.0005,
+        "gamma": 0.98,
+        "batch_size": 64,
+        "replay_capacity": 20000,
+        "learning_starts": 1000,
+        "train_every": 4,
+        "target_update_every": 250,
+        "epsilon_start": 1.0,
+        "epsilon_end": 0.05,
+        "epsilon_decay_steps": 50000,
+        "reward_scale": 0.1,
+        "grad_clip": 10.0,
+        "double_dqn": false,
+        "mask_actions": true,
+        "navigation_features": true,
+        "wall_features": false,
+        "local_wall_features": true,
+        "seed": 10000,
+        "device": "cpu",
+        "num_threads": 1
+      },
+      "input_size": 516,
+      "parameters": 83204,
+      "checkpoint": "outputs/dqn/final-map-features/local_walls-seed10000/best.pt",
+      "selected_episode": 850,
+      "selected_validation": {
+        "Episodes": 10,
+        "Mean-score": 1198,
+        "Std-score": 377.82418015673784,
+        "Mean-reward": 802.7,
+        "Mean-steps": 342.8,
+        "Mean-food-fraction": 0.8557142857142858,
+        "Win-rate": 0.0,
+        "Death-rate": 0.5
+      },
+      "final_environment_steps": 67799,
+      "timing": {
+        "total_seconds": 109.85528949999934,
+        "validation_seconds": 15.899446125000395,
+        "environment_steps": 67799,
+        "episodes": 1000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "training_with_setup_seconds": 109.85700270899906,
+      "test_plus_loop_inspection_seconds": 88.58014629199897,
+      "metrics": {
+        "Episodes": 300,
+        "Mean-score": 1100,
+        "Std-score": 383.4738242866695,
+        "Mean-reward": 753.3766666666667,
+        "Mean-steps": 292.93666666666667,
+        "Mean-food-fraction": 0.7857142857142857,
+        "Win-rate": 0.19666666666666666,
+        "Death-rate": 0.5133333333333333,
+        "Min-steps-on-win": 221
+      },
+      "loops": {
+        "episodes": 300,
+        "seed": 2000000,
+        "mean_score": 1100,
+        "mean_reward": 753.3766666666667,
+        "mean_steps": 292.93666666666667,
+        "mean_loop_steps": 35.49666666666667,
+        "loop_step_fraction": 0.12117522558914896,
+        "episodes_with_loops": 202,
+        "mean_longest_foodless_run": 92.54333333333334,
+        "win_rate": 0.19666666666666666
+      }
+    },
+    {
+      "variant": "walls",
+      "training_seed": 20000,
+      "environment": {
+        "grid_size": 15,
+        "num_ghosts": 4,
+        "max_steps": 500,
+        "stability_rate": 0.75,
+        "full_hash": true
+      },
+      "map_identity": {
+        "wall_sha256": "947f56f9a1f9c5b870f8db568cf1e334e3e5d8dfb2f0817389ce2f117ec035bd",
+        "initial_food": 140,
+        "all_food_reachable": true
+      },
+      "config": {
+        "hidden_size": 128,
+        "learning_rate": 0.0005,
+        "gamma": 0.98,
+        "batch_size": 64,
+        "replay_capacity": 20000,
+        "learning_starts": 1000,
+        "train_every": 4,
+        "target_update_every": 250,
+        "epsilon_start": 1.0,
+        "epsilon_end": 0.05,
+        "epsilon_decay_steps": 50000,
+        "reward_scale": 0.1,
+        "grad_clip": 10.0,
+        "double_dqn": false,
+        "mask_actions": true,
+        "navigation_features": true,
+        "wall_features": true,
+        "local_wall_features": false,
+        "seed": 20000,
+        "device": "cpu",
+        "num_threads": 1
+      },
+      "input_size": 737,
+      "parameters": 111492,
+      "checkpoint": "outputs/dqn/final-map-features/walls-seed20000/best.pt",
+      "selected_episode": 1000,
+      "selected_validation": {
+        "Episodes": 10,
+        "Mean-score": 1138,
+        "Std-score": 433.81511679003944,
+        "Mean-reward": 841.5,
+        "Mean-steps": 252.9,
+        "Mean-food-fraction": 0.8128571428571428,
+        "Win-rate": 0.6,
+        "Death-rate": 0.4,
+        "Min-steps-on-win": 249
+      },
+      "final_environment_steps": 57679,
+      "timing": {
+        "total_seconds": 91.17196462500033,
+        "validation_seconds": 11.84910262300582,
+        "environment_steps": 57679,
+        "episodes": 1000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "training_with_setup_seconds": 91.17383583399896,
+      "test_plus_loop_inspection_seconds": 55.34144683299928,
+      "metrics": {
+        "Episodes": 300,
+        "Mean-score": 982.2,
+        "Std-score": 440.81009342066847,
+        "Mean-reward": 735.4666666666667,
+        "Mean-steps": 180.12333333333333,
+        "Mean-food-fraction": 0.7015714285714286,
+        "Win-rate": 0.36,
+        "Death-rate": 0.6233333333333333,
+        "Min-steps-on-win": 210
+      },
+      "loops": {
+        "episodes": 300,
+        "seed": 2000000,
+        "mean_score": 982.2,
+        "mean_reward": 735.4666666666667,
+        "mean_steps": 180.12333333333333,
+        "mean_loop_steps": 10.706666666666667,
+        "loop_step_fraction": 0.05944075355774747,
+        "episodes_with_loops": 135,
+        "mean_longest_foodless_run": 33.906666666666666,
+        "win_rate": 0.36
+      }
+    },
+    {
+      "variant": "no_walls",
+      "training_seed": 20000,
+      "environment": {
+        "grid_size": 15,
+        "num_ghosts": 4,
+        "max_steps": 500,
+        "stability_rate": 0.75,
+        "full_hash": true
+      },
+      "map_identity": {
+        "wall_sha256": "947f56f9a1f9c5b870f8db568cf1e334e3e5d8dfb2f0817389ce2f117ec035bd",
+        "initial_food": 140,
+        "all_food_reachable": true
+      },
+      "config": {
+        "hidden_size": 128,
+        "learning_rate": 0.0005,
+        "gamma": 0.98,
+        "batch_size": 64,
+        "replay_capacity": 20000,
+        "learning_starts": 1000,
+        "train_every": 4,
+        "target_update_every": 250,
+        "epsilon_start": 1.0,
+        "epsilon_end": 0.05,
+        "epsilon_decay_steps": 50000,
+        "reward_scale": 0.1,
+        "grad_clip": 10.0,
+        "double_dqn": false,
+        "mask_actions": true,
+        "navigation_features": true,
+        "wall_features": false,
+        "local_wall_features": false,
+        "seed": 20000,
+        "device": "cpu",
+        "num_threads": 1
+      },
+      "input_size": 512,
+      "parameters": 82692,
+      "checkpoint": "outputs/dqn/final-map-features/no_walls-seed20000/best.pt",
+      "selected_episode": 950,
+      "selected_validation": {
+        "Episodes": 10,
+        "Mean-score": 1333,
+        "Std-score": 118.60766323378004,
+        "Mean-reward": 991.6,
+        "Mean-steps": 299.8,
+        "Mean-food-fraction": 0.9521428571428572,
+        "Win-rate": 0.5,
+        "Death-rate": 0.4,
+        "Min-steps-on-win": 284
+      },
+      "final_environment_steps": 64219,
+      "timing": {
+        "total_seconds": 102.6636582079991,
+        "validation_seconds": 13.834028705998207,
+        "environment_steps": 64219,
+        "episodes": 1000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "training_with_setup_seconds": 102.6653562499996,
+      "test_plus_loop_inspection_seconds": 68.24839249999968,
+      "metrics": {
+        "Episodes": 300,
+        "Mean-score": 1060.6666666666667,
+        "Std-score": 425.05977020852174,
+        "Mean-reward": 769.9466666666667,
+        "Mean-steps": 232.76666666666668,
+        "Mean-food-fraction": 0.7576190476190476,
+        "Win-rate": 0.36666666666666664,
+        "Death-rate": 0.5466666666666666,
+        "Min-steps-on-win": 222
+      },
+      "loops": {
+        "episodes": 300,
+        "seed": 2000000,
+        "mean_score": 1060.6666666666667,
+        "mean_reward": 769.9466666666667,
+        "mean_steps": 232.76666666666668,
+        "mean_loop_steps": 20.953333333333333,
+        "loop_step_fraction": 0.09001861664041243,
+        "episodes_with_loops": 170,
+        "mean_longest_foodless_run": 50.53,
+        "win_rate": 0.36666666666666664
+      }
+    },
+    {
+      "variant": "local_walls",
+      "training_seed": 20000,
+      "environment": {
+        "grid_size": 15,
+        "num_ghosts": 4,
+        "max_steps": 500,
+        "stability_rate": 0.75,
+        "full_hash": true
+      },
+      "map_identity": {
+        "wall_sha256": "947f56f9a1f9c5b870f8db568cf1e334e3e5d8dfb2f0817389ce2f117ec035bd",
+        "initial_food": 140,
+        "all_food_reachable": true
+      },
+      "config": {
+        "hidden_size": 128,
+        "learning_rate": 0.0005,
+        "gamma": 0.98,
+        "batch_size": 64,
+        "replay_capacity": 20000,
+        "learning_starts": 1000,
+        "train_every": 4,
+        "target_update_every": 250,
+        "epsilon_start": 1.0,
+        "epsilon_end": 0.05,
+        "epsilon_decay_steps": 50000,
+        "reward_scale": 0.1,
+        "grad_clip": 10.0,
+        "double_dqn": false,
+        "mask_actions": true,
+        "navigation_features": true,
+        "wall_features": false,
+        "local_wall_features": true,
+        "seed": 20000,
+        "device": "cpu",
+        "num_threads": 1
+      },
+      "input_size": 516,
+      "parameters": 83204,
+      "checkpoint": "outputs/dqn/final-map-features/local_walls-seed20000/best.pt",
+      "selected_episode": 950,
+      "selected_validation": {
+        "Episodes": 10,
+        "Mean-score": 1301,
+        "Std-score": 159.96180099566826,
+        "Mean-reward": 875.3,
+        "Mean-steps": 385.1,
+        "Mean-food-fraction": 0.9292857142857143,
+        "Win-rate": 0.1,
+        "Death-rate": 0.4,
+        "Min-steps-on-win": 336
+      },
+      "final_environment_steps": 65467,
+      "timing": {
+        "total_seconds": 106.39221091699983,
+        "validation_seconds": 15.868237415990734,
+        "environment_steps": 65467,
+        "episodes": 1000,
+        "device": "cpu",
+        "num_threads": 1,
+        "scope": "Training loop including periodic validation and checkpoint/log writes; excludes setup and final test evaluation."
+      },
+      "training_with_setup_seconds": 106.39398995899865,
+      "test_plus_loop_inspection_seconds": 82.68476991600073,
+      "metrics": {
+        "Episodes": 300,
+        "Mean-score": 1077.8666666666666,
+        "Std-score": 412.49641598388956,
+        "Mean-reward": 739.89,
+        "Mean-steps": 283,
+        "Mean-food-fraction": 0.7699047619047619,
+        "Win-rate": 0.12,
+        "Death-rate": 0.5233333333333333,
+        "Min-steps-on-win": 220
+      },
+      "loops": {
+        "episodes": 300,
+        "seed": 2000000,
+        "mean_score": 1077.8666666666666,
+        "mean_reward": 739.89,
+        "mean_steps": 283,
+        "mean_loop_steps": 26.656666666666666,
+        "loop_step_fraction": 0.09419316843345112,
+        "episodes_with_loops": 188,
+        "mean_longest_foodless_run": 82.35,
+        "win_rate": 0.12
+      }
+    }
+  ],
+  "aggregate": {
+    "walls": {
+      "score": {
+        "mean": 1004.1444444444444,
+        "sample_std": 20.18999568910117
+      },
+      "reward": {
+        "mean": 735.4855555555556,
+        "sample_std": 28.785004648125224
+      },
+      "win_rate": {
+        "mean": 0.3333333333333333,
+        "sample_std": 0.0896908269804914
+      },
+      "food_fraction": {
+        "mean": 0.7172460317460317,
+        "sample_std": 0.014421425492215109
+      },
+      "loop_fraction": {
+        "mean": 0.07881326373202775,
+        "sample_std": 0.026764632907742354
+      },
+      "training_seconds": {
+        "mean": 94.19742034699993,
+        "sample_std": 4.921005777692731
+      }
+    },
+    "no_walls": {
+      "score": {
+        "mean": 1066.111111111111,
+        "sample_std": 44.848539346131254
+      },
+      "reward": {
+        "mean": 747.0166666666667,
+        "sample_std": 41.85561730520766
+      },
+      "win_rate": {
+        "mean": 0.2644444444444444,
+        "sample_std": 0.09856376014953372
+      },
+      "food_fraction": {
+        "mean": 0.7615079365079365,
+        "sample_std": 0.032034670961522314
+      },
+      "loop_fraction": {
+        "mean": 0.10594328859573783,
+        "sample_std": 0.014250950399387322
+      },
+      "training_seconds": {
+        "mean": 110.92072604166606,
+        "sample_std": 7.32056845317255
+      }
+    },
+    "local_walls": {
+      "score": {
+        "mean": 1066.8333333333333,
+        "sample_std": 39.84596731303069
+      },
+      "reward": {
+        "mean": 731.9388888888889,
+        "sample_std": 26.329691168660492
+      },
+      "win_rate": {
+        "mean": 0.17222222222222222,
+        "sample_std": 0.045256470787591783
+      },
+      "food_fraction": {
+        "mean": 0.7620238095238095,
+        "sample_std": 0.02846140522359334
+      },
+      "loop_fraction": {
+        "mean": 0.11563846082417031,
+        "sample_std": 0.019282603312378466
+      },
+      "training_seconds": {
+        "mean": 112.13188452799962,
+        "sample_std": 7.154973828566356
+      }
+    }
+  },
+  "limitations": [
+    "Same fixed maze; no unseen-maze generalization measured.",
+    "1000-episode default is the current notebook budget, not a guarantee of convergence.",
+    "Equal episode counts, validation rule and hyperparameters; interaction counts/initial weights differ.",
+    "Three trained models per condition; shared test seeds do not create 900 independent training runs.",
+    "Concurrent processes share CPU capacity; timings are not isolated speed comparisons.",
+    "BFS distances and legal-action masking use walls in every variant."
+  ],
+  "date": "2026-11-13",
+  "source_manifest": {
+    "source_commit_after_preflight": "dd369271d5986b559c79532217f259130af3d596",
+    "files": {
+      "src/controller/dqn.py": "a4381c79b159b0817b6f68fff3145400584dc40c365c2fa7f5e449e4ff0799ff",
+      "src/environment/basic_ghosts.py": "6d080a2d5c78221abf7359164a3f77426478610c0e1a02b2351fd806564f2fea",
+      "src/environment/__init__.py": "9b81b92f022a2a270551fb4f317cf49c3fad0b24b2c9d2c31dbe74a8ce0c0be0",
+      "src/controller/__init__.py": "364f47d3337cb58f303cf383e85acd8400ce3822da8253677043412372969d96",
+      "scripts/inspect_dqn_loops.py": "a28140d2a83264f934494fe36e2925568596ea60841797ef79cbdd1543322c4f",
+      "scripts/compare_final_map_features.py": "2ab2ab487c3ed0ca8d286213dc8790503007cbe6ddb910c7500ae5900f1ccda6"
+    }
+  },
+  "note_about_source_commit": "Experiment startup HEAD predates the committed preflight fixes; source_manifest identifies the actual code used.",
+  "tests_passed": 3,
+  "recommendation": "For this 1000-episode fixed-map baseline, use raw walls if prioritizing wins and fewer two-cell loops; four local wall bits did not improve on no raw walls. No universal advantage or convergence claim.",
+  "map_identity": {
+    "wall_sha256": "947f56f9a1f9c5b870f8db568cf1e334e3e5d8dfb2f0817389ce2f117ec035bd",
+    "walls": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        0,
+        5
+      ],
+      [
+        0,
+        6
+      ],
+      [
+        0,
+        7
+      ],
+      [
+        0,
+        8
+      ],
+      [
+        0,
+        9
+      ],
+      [
+        0,
+        10
+      ],
+      [
+        0,
+        11
+      ],
+      [
+        0,
+        12
+      ],
+      [
+        0,
+        13
+      ],
+      [
+        0,
+        14
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        14
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        2,
+        10
+      ],
+      [
+        2,
+        14
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        14
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        4,
+        10
+      ],
+      [
+        4,
+        14
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        5,
+        2
+      ],
+      [
+        5,
+        4
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        5,
+        6
+      ],
+      [
+        5,
+        8
+      ],
+      [
+        5,
+        9
+      ],
+      [
+        5,
+        10
+      ],
+      [
+        5,
+        12
+      ],
+      [
+        5,
+        14
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        6,
+        10
+      ],
+      [
+        6,
+        14
+      ],
+      [
+        7,
+        0
+      ],
+      [
+        7,
+        14
+      ],
+      [
+        8,
+        0
+      ],
+      [
+        8,
+        5
+      ],
+      [
+        8,
+        10
+      ],
+      [
+        8,
+        14
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        9,
+        5
+      ],
+      [
+        9,
+        10
+      ],
+      [
+        9,
+        14
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        10,
+        2
+      ],
+      [
+        10,
+        4
+      ],
+      [
+        10,
+        5
+      ],
+      [
+        10,
+        6
+      ],
+      [
+        10,
+        8
+      ],
+      [
+        10,
+        9
+      ],
+      [
+        10,
+        10
+      ],
+      [
+        10,
+        12
+      ],
+      [
+        10,
+        14
+      ],
+      [
+        11,
+        0
+      ],
+      [
+        11,
+        14
+      ],
+      [
+        12,
+        0
+      ],
+      [
+        12,
+        5
+      ],
+      [
+        12,
+        10
+      ],
+      [
+        12,
+        14
+      ],
+      [
+        13,
+        0
+      ],
+      [
+        13,
+        14
+      ],
+      [
+        14,
+        0
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        14,
+        2
+      ],
+      [
+        14,
+        3
+      ],
+      [
+        14,
+        4
+      ],
+      [
+        14,
+        5
+      ],
+      [
+        14,
+        6
+      ],
+      [
+        14,
+        7
+      ],
+      [
+        14,
+        8
+      ],
+      [
+        14,
+        9
+      ],
+      [
+        14,
+        10
+      ],
+      [
+        14,
+        11
+      ],
+      [
+        14,
+        12
+      ],
+      [
+        14,
+        13
+      ],
+      [
+        14,
+        14
+      ]
+    ],
+    "initial_food": 140,
+    "all_food_reachable": true
+  }
+}

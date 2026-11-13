@@ -83,3 +83,35 @@ predefined larger-budget experiment, not tuning on the current held-out test.
 
 This is a DQN-only experiment. No MCTS rollout is used, so the shared search/game
 RNG issue does not affect this comparison and remains separate integration work.
+
+## Results (2026-11-13)
+
+Entries are mean ± sample standard deviation across three independently trained models. Percentages are in percent units, including their standard deviations.
+
+| Encoding | Score | Win rate (%) | Food collected (%) | Flagged loop steps (%) | Training seconds |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Raw wall plane | 1004.14 ± 20.19 | 33.33 ± 8.97 | 71.72 ± 1.44 | 7.88 ± 2.68 | 94.20 ± 4.92 |
+| No raw wall plane | 1066.11 ± 44.85 | 26.44 ± 9.86 | 76.15 ± 3.20 | 10.59 ± 1.43 | 110.92 ± 7.32 |
+| Four local wall bits | 1066.83 ± 39.85 | 17.22 ± 4.53 | 76.20 ± 2.85 | 11.56 ± 1.93 | 112.13 ± 7.15 |
+
+The raw-wall condition had the highest mean win rate (33.33%) and lowest flagged-loop fraction (7.88%) at this budget. The other two conditions collected more food and scored higher, but won less often. Local bits did not improve on simply omitting raw walls: 17.22% versus 26.44% wins, and 11.56% versus 10.59% loop steps.
+
+For the current notebook budget, the raw-wall encoding is the recommended baseline if the priorities are completing games and reducing oscillation. Retain the other conditions as feature-ablation exercises. This is a conditional recommendation from three training seeds, not proof that the raw plane is necessary or universally better. On a single fixed map, the raw wall plane is constant; it can still change optimization through parameterization/initialization.
+
+| Encoding | Seed | Validation-selected episode | Test score | Test win rate | Loop-step fraction |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Raw wall plane | 0 | 1000 | 1021.93 | 40.67% | 6.76% |
+| No raw wall plane | 0 | 800 | 1024.23 | 17.00% | 11.03% |
+| Four local wall bits | 0 | 750 | 1022.63 | 20.00% | 13.15% |
+| Raw wall plane | 10000 | 950 | 1008.30 | 23.33% | 10.94% |
+| No raw wall plane | 10000 | 800 | 1113.43 | 25.67% | 11.75% |
+| Four local wall bits | 10000 | 850 | 1100.00 | 19.67% | 12.12% |
+| Raw wall plane | 20000 | 1000 | 982.20 | 36.00% | 5.94% |
+| No raw wall plane | 20000 | 950 | 1060.67 | 36.67% | 9.00% |
+| Four local wall bits | 20000 | 950 | 1077.87 | 12.00% | 9.42% |
+
+The nine training loops took about 91-120 seconds each on this machine, with concurrent jobs and validation included. This is not a portable runtime promise. Timing does not include the two 300-game evaluation passes.
+
+Full settings, per-model results, maze identity, code hashes and timing are in `dqn-final-map-features-validation.json`. Large checkpoints and logs stay in local `outputs/dqn/final-map-features/`. Three targeted integration tests passed. Existing legacy imports/tests outside this experiment still need migration.
+
+These results supersede neither the old 10 x 10 experiments nor their different training budgets: they answer the feature question specifically for the confirmed 15 x 15 environment and current 1000-episode notebook setup. A larger-budget follow-up must use fresh held-out test seeds if the present results inform its design.
